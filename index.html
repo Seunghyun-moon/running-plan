@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="러닝 플랜">
+<title>러닝 훈련 계획</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #f0f0f0; min-height: 100vh; }
+  header { background: #111; padding: 1rem 1.25rem 0.75rem; position: sticky; top: 0; z-index: 10; border-bottom: 0.5px solid #222; }
+  header h1 { font-size: 17px; font-weight: 600; }
+  header p { font-size: 12px; color: #888; margin-top: 2px; }
+  .sync-bar { font-size: 11px; color: #666; margin-top: 6px; }
+  .sync-bar.ok { color: #4caf50; }
+  .sync-bar.err { color: #f44336; }
+  .progress-wrap { margin-top: 8px; background: #222; border-radius: 3px; height: 3px; }
+  .progress-fill { height: 3px; background: #4a9eff; border-radius: 3px; transition: width 0.4s; }
+  .container { padding: 0.75rem 1rem 4rem; }
+  .week-block { margin-bottom: 0.75rem; background: #111; border: 0.5px solid #222; border-radius: 14px; overflow: hidden; }
+  .week-header { padding: 0.875rem 1rem; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .week-title { font-size: 15px; font-weight: 600; flex: 1; }
+  .week-date { font-size: 12px; color: #666; font-weight: 400; }
+  .badge { font-size: 10px; padding: 3px 8px; border-radius: 20px; font-weight: 600; }
+  .badge-build { background: #1a3a5c; color: #4a9eff; }
+  .badge-race { background: #3a1a1a; color: #ff6b6b; }
+  .badge-recover { background: #1a3a1a; color: #4caf50; }
+  .badge-peak { background: #3a2a1a; color: #ffb74d; }
+  .chev { font-size: 14px; color: #555; transition: transform 0.2s; }
+  .chev.open { transform: rotate(180deg); }
+  .week-progress { font-size: 11px; color: #555; }
+  .week-body { display: none; border-top: 0.5px solid #1e1e1e; }
+  .week-body.open { display: block; }
+  .day-row { display: flex; align-items: flex-start; gap: 12px; padding: 0.75rem 1rem; border-bottom: 0.5px solid #1a1a1a; }
+  .day-row:last-child { border-bottom: none; }
+  .day-row.done .day-type { opacity: 0.4; }
+  .day-row.done .day-detail { opacity: 0.3; }
+  .checkbox { width: 22px; height: 22px; border: 1.5px solid #333; border-radius: 6px; flex-shrink: 0; margin-top: 1px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .checkbox.checked { background: #4a9eff; border-color: #4a9eff; }
+  .checkbox.checked::after { content: '✓'; font-size: 13px; color: #fff; font-weight: 700; }
+  .checkbox.loading { border-color: #555; opacity: 0.5; }
+  .day-label { font-size: 12px; color: #555; min-width: 18px; margin-top: 3px; font-weight: 500; }
+  .day-content { flex: 1; }
+  .day-type { font-size: 14px; font-weight: 600; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+  .tag { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
+  .tag-lsd { background: #1a3a5c; color: #4a9eff; }
+  .tag-interval { background: #3a1a1a; color: #ff6b6b; }
+  .tag-tempo { background: #3a2a1a; color: #ffb74d; }
+  .tag-jog { background: #1a2a1a; color: #81c784; }
+  .tag-race { background: #3a1a1a; color: #ff6b6b; }
+  .tag-rest { background: #222; color: #888; }
+  .day-detail { font-size: 12px; color: #666; line-height: 1.6; }
+  .loading-screen { display: flex; align-items: center; justify-content: center; min-height: 60vh; flex-direction: column; gap: 12px; color: #555; font-size: 14px; }
+  .spinner { width: 28px; height: 28px; border: 2px solid #222; border-top-color: #4a9eff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .vdot-box { background: #111; border: 0.5px solid #222; border-radius: 14px; padding: 0.875rem 1rem; margin-bottom: 0.75rem; }
+  .vdot-title { font-size: 11px; color: #555; margin-bottom: 8px; font-weight: 600; letter-spacing: 0.05em; }
+  .vdot-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .vdot-item { font-size: 12px; color: #666; }
+  .vdot-item span { color: #ccc; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏃 러닝 훈련 계획</h1>
+  <p>VDOT 39.1 · 목표: 하프 존3-4로 1:50 진입</p>
+  <div class="sync-bar" id="syncBar">데이터 불러오는 중...</div>
+  <div class="progress-wrap"><div class="progress-fill" id="totalProgress" style="width:0%"></div></div>
+</header>
+
+<div class="container" id="app">
+  <div class="loading-screen">
+    <div class="spinner"></div>
+    <span>구글 시트에서 불러오는 중...</span>
+  </div>
+</div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbzpGKD_IPzp-YYKJDkjR7F8Kl_R5CN9wEUVnCMuwxdWiWcJEOy2x7oVjSyUMPzvAyIw/exec';
+
+const TYPE_TAG = {
+  'LSD': 'lsd', 'LSD 축소': 'lsd',
+  '인터벌': 'interval', '인터벌 축소': 'interval',
+  '템포런': 'tempo', '가벼운 템포': 'tempo', '10km 테스트런': 'tempo',
+  '조깅': 'jog', '가벼운 조깅': 'jog',
+  '하프마라톤': 'race',
+  '완전 휴식': 'rest', '휴식': 'rest'
+};
+
+let allData = [];
+let weekMap = {};
+
+async function loadData() {
+  try {
+    const res = await fetch(API);
+    const raw = await res.json();
+    allData = raw.slice(1);
+    buildWeekMap();
+    render();
+    updateSyncBar('마지막 동기화: 방금', true);
+    updateTotalProgress();
+  } catch(e) {
+    document.getElementById('app').innerHTML = '<div class="loading-screen"><span style="color:#f44336">데이터 로드 실패. 인터넷 연결을 확인해주세요.</span></div>';
+    updateSyncBar('동기화 실패', false);
+  }
+}
+
+function buildWeekMap() {
+  weekMap = {};
+  allData.forEach(row => {
+    const wi = row[0];
+    if (!weekMap[wi]) weekMap[wi] = { label: row[2], date: row[3], days: [] };
+    weekMap[wi].days.push({ di: row[1], day: row[4], type: row[5], detail: row[6], checked: row[7] === 'TRUE' });
+  });
+}
+
+function getBadge(label) {
+  if (label.includes('대회')) return ['race', '레이스'];
+  if (label.includes('3주차')) return ['recover', '회복'];
+  if (label.includes('7주차')) return ['recover', '테이퍼'];
+  if (label.includes('6주차') || label.includes('8주차')) return ['peak', '피크'];
+  return ['build', '빌드업'];
+}
+
+function render() {
+  const app = document.getElementById('app');
+  const wiKeys = Object.keys(weekMap).sort((a,b) => a-b);
+
+  let html = `<div class="vdot-box">
+    <div class="vdot-title">VDOT 기준 페이스</div>
+    <div class="vdot-grid">
+      <div class="vdot-item">Easy <span>6:19-7:55/km</span></div>
+      <div class="vdot-item">Threshold <span>5:19-5:38/km</span></div>
+      <div class="vdot-item">Interval <span>4:41-4:55/km</span></div>
+      <div class="vdot-item">하프 예상 <span>1:52:59</span></div>
+    </div>
+  </div>`;
+
+  wiKeys.forEach(wi => {
+    const w = weekMap[wi];
+    const done = w.days.filter(d => d.checked).length;
+    const total = w.days.length;
+    const [badgeClass, badgeText] = getBadge(w.label);
+    const isOpen = wi == 0 ? 'open' : '';
+
+    html += `<div class="week-block">
+      <div class="week-header" onclick="toggleWeek(${wi})">
+        <div style="flex:1">
+          <div class="week-title">${w.label} <span class="week-date">${w.date}</span></div>
+        </div>
+        <span class="badge badge-${badgeClass}">${badgeText}</span>
+        <span class="week-progress">${done}/${total}</span>
+        <span class="chev ${isOpen}" id="chev-${wi}">▾</span>
+      </div>
+      <div class="week-body ${isOpen}" id="body-${wi}">
+        ${w.days.map(d => {
+          const tag = TYPE_TAG[d.type] || 'jog';
+          const checkedClass = d.checked ? 'checked' : '';
+          const doneClass = d.checked ? 'done' : '';
+          return `<div class="day-row ${doneClass}" id="row-${wi}-${d.di}">
+            <div class="checkbox ${checkedClass}" id="cb-${wi}-${d.di}" onclick="toggleCheck(${wi},${d.di})"></div>
+            <div class="day-label">${d.day}</div>
+            <div class="day-content">
+              <div class="day-type"><span class="tag tag-${tag}">${d.type}</span></div>
+              <div class="day-detail">${d.detail}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  });
+
+  app.innerHTML = html;
+}
+
+function toggleWeek(wi) {
+  const body = document.getElementById('body-' + wi);
+  const chev = document.getElementById('chev-' + wi);
+  body.classList.toggle('open');
+  chev.classList.toggle('open');
+}
+
+async function toggleCheck(wi, di) {
+  const cb = document.getElementById('cb-' + wi + '-' + di);
+  const row = document.getElementById('row-' + wi + '-' + di);
+  if (cb.classList.contains('loading')) return;
+
+  const nowChecked = !cb.classList.contains('checked');
+  cb.classList.add('loading');
+
+  try {
+    await fetch(API, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wi: parseInt(wi), di: parseInt(di), checked: nowChecked })
+    });
+    cb.classList.remove('loading');
+    cb.classList.toggle('checked', nowChecked);
+    row.classList.toggle('done', nowChecked);
+
+    const entry = weekMap[wi].days.find(d => d.di == di);
+    if (entry) entry.checked = nowChecked;
+
+    updateWeekProgress(wi);
+    updateTotalProgress();
+    updateSyncBar('저장 완료', true);
+  } catch(e) {
+    cb.classList.remove('loading');
+    updateSyncBar('저장 실패 - 재시도 해주세요', false);
+  }
+}
+
+function updateWeekProgress(wi) {
+  const w = weekMap[wi];
+  const done = w.days.filter(d => d.checked).length;
+  const total = w.days.length;
+  const el = document.querySelector('#body-' + wi + ' ~ .week-header .week-progress') ||
+    document.querySelector('[id="chev-' + wi + '"]').previousElementSibling;
+  if (el) el.textContent = done + '/' + total;
+}
+
+function updateTotalProgress() {
+  let done = 0, total = 0;
+  Object.values(weekMap).forEach(w => {
+    done += w.days.filter(d => d.checked).length;
+    total += w.days.length;
+  });
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+  document.getElementById('totalProgress').style.width = pct + '%';
+}
+
+function updateSyncBar(msg, ok) {
+  const el = document.getElementById('syncBar');
+  el.textContent = msg;
+  el.className = 'sync-bar ' + (ok ? 'ok' : 'err');
+}
+
+loadData();
+</script>
+</body>
+</html>
