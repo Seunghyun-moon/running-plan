@@ -79,8 +79,32 @@
 </div>
 
 <script>
-const API = 'https://script.google.com/macros/s/AKfycbxVtBeq3cK0OnQyTW-rzSfcTRtejUD6Jn_yQnelTgFaZDBXpuAKk2RQtmmx0rat1PMv/exec';
 const CACHE_KEY = 'running_plan_cache';
+
+const DEFAULT_DATA = [
+  [0,0,'1주차','5/12-5/18','월','조깅','40분 / 6:30-7:30/km / 심박수 140 이하','FALSE'],
+  [0,1,'1주차','5/12-5/18','화','인터벌','400m x 8세트 / 2:00-2:05/400m / 총 5km','FALSE'],
+  [0,2,'1주차','5/12-5/18','수','조깅','40분 / Easy / 심박수 140 이하','FALSE'],
+  [0,3,'1주차','5/12-5/18','목','템포런','20분 / 5:19-5:38/km / 심박수 165-172','FALSE'],
+  [0,4,'1주차','5/12-5/18','금','조깅','30분 / 회복 조깅','FALSE'],
+  [0,5,'1주차','5/12-5/18','토','조깅','40분 / Easy / 내일 LSD 대비','FALSE'],
+  [0,6,'1주차','5/12-5/18','일','LSD','14km / 6:50-7:10/km / 심박수 140-150 / 155 넘으면 걷기','FALSE'],
+  [1,0,'2주차','5/19-5/25','월','조깅','40분 / Easy','FALSE'],
+  [1,1,'2주차','5/19-5/25','화','인터벌','400m x 10세트 / 1:55-2:05/400m / 총 6km','FALSE'],
+  [1,2,'2주차','5/19-5/25','수','조깅','40분 / Easy','FALSE'],
+  [1,3,'2주차','5/19-5/25','목','템포런','25분 / 5:19-5:30/km / 심박수 165-172','FALSE'],
+  [1,4,'2주차','5/19-5/25','금','조깅','30분 / 회복','FALSE'],
+  [1,5,'2주차','5/19-5/25','토','조깅','20분 / 대회 전날 다리 풀기','FALSE'],
+  [1,6,'2주차','5/19-5/25','일','LSD','15km / 6:40-7:00/km / 심박수 140-150','FALSE'],
+  [2,0,'5/30 대회','5월 30일','일','하프마라톤','존3-4 유지 / 초반 6:40/km 억제 / 목표 2:13-2:20','FALSE'],
+  [3,0,'3주차','6/2-6/8','월','휴식','스트레칭만','FALSE'],
+  [3,1,'3주차','6/2-6/8','화','가벼운 조깅','30분 / 심박수 130 이하','FALSE'],
+  [3,2,'3주차','6/2-6/8','수','조깅','40분 / Easy','FALSE'],
+  [3,3,'3주차','6/2-6/8','목','가벼운 템포','15분 / 5:30-5:40/km','FALSE'],
+  [3,4,'3주차','6/2-6/8','금','조깅','30분','FALSE'],
+  [3,5,'3주차','6/2-6/8','토','조깅','40분 / Easy','FALSE'],
+  [3,6,'3주차','6/2-6/8','일','완전 휴식','대회 후 회복','FALSE'],
+];
 
 const TYPE_TAG = {
   'LSD': 'lsd', 'LSD 축소': 'lsd',
@@ -94,45 +118,23 @@ const TYPE_TAG = {
 let allData = [];
 let weekMap = {};
 
-function loadCache() {
+function loadData() {
   try {
     const cached = localStorage.getItem(CACHE_KEY);
-    return cached ? JSON.parse(cached) : null;
-  } catch(e) { return null; }
-}
-
-function saveCache(data) {
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch(e) {}
-}
-
-async function loadData() {
-  const cached = loadCache();
-  if (cached) {
-    allData = cached;
-    buildWeekMap();
-    render();
-    updateTotalProgress();
-    updateSyncBar('캐시 로드 완료 · 백그라운드 동기화 중...', true);
-  }
-
-  try {
-    const res = await fetch(API);
-    const raw = await res.json();
-    const fresh = raw.slice(1);
-    if (JSON.stringify(fresh) !== JSON.stringify(allData)) {
-      allData = fresh;
-      buildWeekMap();
-      render();
-      updateTotalProgress();
-    }
-    saveCache(allData);
-    updateSyncBar('마지막 동기화: 방금', true);
+    allData = cached ? JSON.parse(cached) : DEFAULT_DATA.map(r => [...r]);
   } catch(e) {
-    if (!cached) {
-      document.getElementById('app').innerHTML = '<div class="loading-screen"><span style="color:#f44336">데이터 로드 실패. 인터넷 연결을 확인해주세요.</span></div>';
-    }
-    updateSyncBar(cached ? '오프라인 · 캐시 데이터 표시 중' : '동기화 실패', cached ? true : false);
+    allData = DEFAULT_DATA.map(r => [...r]);
   }
+  if (!allData.length) allData = DEFAULT_DATA.map(r => [...r]);
+  saveData();
+  buildWeekMap();
+  render();
+  updateTotalProgress();
+  updateSyncBar('로컬 저장', true);
+}
+
+function saveData() {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(allData)); } catch(e) {}
 }
 
 function buildWeekMap() {
@@ -210,34 +212,23 @@ function toggleWeek(wi) {
   chev.classList.toggle('open');
 }
 
-async function toggleCheck(wi, di) {
+function toggleCheck(wi, di) {
   const cb = document.getElementById('cb-' + wi + '-' + di);
   const row = document.getElementById('row-' + wi + '-' + di);
-  if (cb.classList.contains('loading')) return;
-
   const nowChecked = !cb.classList.contains('checked');
 
-  // 로컬 즉시 반영
   cb.classList.toggle('checked', nowChecked);
   row.classList.toggle('done', nowChecked);
+
   const entry = weekMap[wi].days.find(d => d.di == di);
   if (entry) entry.checked = nowChecked;
+
+  const dataRow = allData.find(r => r[0] == wi && r[1] == di);
+  if (dataRow) dataRow[7] = nowChecked ? 'TRUE' : 'FALSE';
+
+  saveData();
   updateWeekProgress(wi);
   updateTotalProgress();
-  saveCache(allData);
-  updateSyncBar('저장 중...', true);
-
-  // 백그라운드에서 서버 동기화
-  fetch(API, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ wi: parseInt(wi), di: parseInt(di), checked: nowChecked })
-  }).then(() => {
-    updateSyncBar('저장 완료', true);
-  }).catch(() => {
-    updateSyncBar('서버 저장 실패 (로컬엔 반영됨)', false);
-  });
 }
 
 function updateWeekProgress(wi) {
@@ -262,7 +253,7 @@ function updateTotalProgress() {
 function updateSyncBar(msg, ok) {
   const el = document.getElementById('syncBar');
   el.textContent = msg;
-  el.className = 'sync-bar ' + (ok ? 'ok' : 'err');
+  el.className = 'sync-bar ok';
 }
 
 loadData();
