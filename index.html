@@ -2,84 +2,100 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="러닝 플랜">
-<title>러닝 훈련 계획</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f7; color: #1a1a1a; min-height: 100vh; }
-  header { background: #fff; padding: 1rem 1.25rem 0.75rem; position: sticky; top: 0; z-index: 10; border-bottom: 0.5px solid #e0e0e0; }
-  header h1 { font-size: 17px; font-weight: 600; }
-  header p { font-size: 12px; color: #888; margin-top: 2px; }
-  .sync-bar { font-size: 11px; color: #aaa; margin-top: 6px; }
-  .sync-bar.ok { color: #34a853; }
-  .sync-bar.err { color: #ea4335; }
-  .progress-wrap { margin-top: 8px; background: #e0e0e0; border-radius: 3px; height: 3px; }
-  .progress-fill { height: 3px; background: #1a73e8; border-radius: 3px; transition: width 0.4s; }
-  .container { padding: 0.75rem 1rem 4rem; }
-  .week-block { margin-bottom: 0.75rem; background: #fff; border: 0.5px solid #e0e0e0; border-radius: 14px; overflow: hidden; }
-  .week-header { padding: 0.875rem 1rem; display: flex; align-items: center; gap: 10px; cursor: pointer; }
-  .week-title { font-size: 15px; font-weight: 600; flex: 1; }
-  .week-date { font-size: 12px; color: #aaa; font-weight: 400; }
-  .badge { font-size: 10px; padding: 3px 8px; border-radius: 20px; font-weight: 600; }
-  .badge-build { background: #e8f0fe; color: #1a73e8; }
-  .badge-race { background: #fce8e6; color: #ea4335; }
-  .badge-recover { background: #e6f4ea; color: #34a853; }
-  .badge-peak { background: #fef7e0; color: #f9ab00; }
-  .chev { font-size: 14px; color: #bbb; transition: transform 0.2s; }
-  .chev.open { transform: rotate(180deg); }
-  .week-progress { font-size: 11px; color: #bbb; }
-  .week-body { display: none; border-top: 0.5px solid #f0f0f0; }
-  .week-body.open { display: block; }
-  .day-row { display: flex; align-items: flex-start; gap: 12px; padding: 0.75rem 1rem; border-bottom: 0.5px solid #f0f0f0; }
-  .day-row:last-child { border-bottom: none; }
-  .day-row.done .day-type { opacity: 0.35; }
-  .day-row.done .day-detail { opacity: 0.3; }
-  .checkbox { width: 22px; height: 22px; border: 1.5px solid #d0d0d0; border-radius: 6px; flex-shrink: 0; margin-top: 1px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
-  .checkbox.checked { background: #1a73e8; border-color: #1a73e8; }
-  .checkbox.checked::after { content: '✓'; font-size: 13px; color: #fff; font-weight: 700; }
-  .checkbox.loading { border-color: #ccc; opacity: 0.5; }
-  .day-label { font-size: 12px; color: #aaa; min-width: 18px; margin-top: 3px; font-weight: 500; }
-  .day-content { flex: 1; }
-  .day-type { font-size: 14px; font-weight: 600; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
-  .tag { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
-  .tag-lsd { background: #e8f0fe; color: #1a73e8; }
-  .tag-interval { background: #fce8e6; color: #ea4335; }
-  .tag-tempo { background: #fef7e0; color: #f9ab00; }
-  .tag-jog { background: #e6f4ea; color: #34a853; }
-  .tag-race { background: #fce8e6; color: #ea4335; }
-  .tag-rest { background: #f0f0f0; color: #aaa; }
-  .day-detail { font-size: 12px; color: #888; line-height: 1.6; }
-  .loading-screen { display: flex; align-items: center; justify-content: center; min-height: 60vh; flex-direction: column; gap: 12px; color: #aaa; font-size: 14px; }
-  .spinner { width: 28px; height: 28px; border: 2px solid #e0e0e0; border-top-color: #1a73e8; border-radius: 50%; animation: spin 0.8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .vdot-box { background: #fff; border: 0.5px solid #e0e0e0; border-radius: 14px; padding: 0.875rem 1rem; margin-bottom: 0.75rem; }
-  .vdot-title { font-size: 11px; color: #aaa; margin-bottom: 8px; font-weight: 600; letter-spacing: 0.05em; }
-  .vdot-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
-  .vdot-item { font-size: 12px; color: #aaa; }
-  .vdot-item span { color: #333; font-weight: 500; }
-</style>
+<title>러닝 플랜</title>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<header>
-  <h1>🏃 러닝 훈련 계획</h1>
-  <p>VDOT 39.1 · 목표: 하프 존3-4로 1:50 진입</p>
-  <div class="sync-bar" id="syncBar">데이터 불러오는 중...</div>
-  <div class="progress-wrap"><div class="progress-fill" id="totalProgress" style="width:0%"></div></div>
-</header>
-
-<div class="container" id="app">
-  <div class="loading-screen">
-    <div class="spinner"></div>
-    <span>구글 시트에서 불러오는 중...</span>
+<!-- ── Plan List ── -->
+<div id="screen-list" class="screen">
+  <header class="list-header"><h1>🏃 러닝 플랜</h1></header>
+  <div class="container">
+    <div id="planListContainer"></div>
+    <button class="btn-new" onclick="showCreate()">+ 새 플랜 만들기</button>
   </div>
 </div>
 
+<!-- ── Create Plan ── -->
+<div id="screen-create" class="screen">
+  <header class="top-header">
+    <div class="top-header-row">
+      <button class="back-btn" onclick="showList()" aria-label="취소"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+      <span class="top-header-title">새 플랜 만들기</span>
+    </div>
+  </header>
+  <div class="container">
+    <div class="form-section">
+      <label class="form-label">플랜 이름</label>
+      <input class="form-input" id="newTitle" type="text" placeholder="예: 2026 가을 하프마라톤" />
+    </div>
+    <div class="form-section">
+      <label class="form-label">최근 레이스 기록</label>
+      <div class="form-row" style="margin-bottom:8px">
+        <select class="form-select" id="raceDist" onchange="updatePreview()">
+          <option value="5000">5K</option>
+          <option value="10000">10K</option>
+          <option value="21097" selected>하프마라톤</option>
+          <option value="42195">풀마라톤</option>
+        </select>
+      </div>
+      <div class="time-wrap">
+        <input class="form-input time-input" id="raceH" type="number" min="0" max="9" placeholder="시" oninput="updatePreview()" />
+        <span class="time-sep">:</span>
+        <input class="form-input time-input" id="raceM" type="number" min="0" max="59" placeholder="분" oninput="updatePreview()" />
+        <span class="time-sep">:</span>
+        <input class="form-input time-input" id="raceS" type="number" min="0" max="59" placeholder="초" oninput="updatePreview()" />
+      </div>
+    </div>
+    <div id="vdotPreview" class="vdot-preview" style="display:none">
+      <div class="vdot-score">VDOT <strong id="vdotVal">-</strong></div>
+      <div class="vdot-paces">
+        <div class="vdot-pace-item">Easy<span id="pEasy">-</span></div>
+        <div class="vdot-pace-item">Tempo<span id="pTempo">-</span></div>
+        <div class="vdot-pace-item">Interval<span id="pInterval">-</span></div>
+      </div>
+    </div>
+    <div class="form-section">
+      <label class="form-label">목표 대회 거리</label>
+      <select class="form-select" id="targetDist" onchange="updateWeeksOptions()">
+        <option value="half">하프마라톤</option>
+        <option value="10k">10K</option>
+        <option value="5k">5K</option>
+        <option value="full">풀마라톤</option>
+      </select>
+    </div>
+    <div class="form-section">
+      <label class="form-label">훈련 시작일</label>
+      <input class="form-input" id="startDate" type="date" />
+    </div>
+    <div class="form-section">
+      <label class="form-label">훈련 기간</label>
+      <select class="form-select" id="numWeeks"></select>
+    </div>
+    <button class="btn-generate" id="btnGenerate" onclick="generateNewPlan()" disabled>플랜 생성하기</button>
+  </div>
+</div>
+
+<!-- ── Plan Detail ── -->
+<div id="screen-detail" class="screen">
+  <header class="top-header">
+    <div class="top-header-row">
+      <button class="back-btn" onclick="showList()" aria-label="뒤로"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+      <input class="title-input" id="titleInput" type="text" placeholder="플랜 이름"
+             onblur="savePlanTitle()" onkeydown="if(event.key==='Enter')this.blur()" />
+    </div>
+    <div class="progress-wrap"><div class="progress-fill" id="totalProgress" style="width:0%"></div></div>
+  </header>
+  <div class="container" id="app"></div>
+</div>
+
 <script>
-const CACHE_KEY = 'running_plan_cache';
+const PLANS_KEY = 'running_plans';
+const LEGACY_KEY = 'running_plan_cache';
 
 const DEFAULT_DATA = [
   [0,0,'1주차','5/12-5/18','월','조깅','40분 / 6:30-7:30/km / 심박수 140 이하','FALSE'],
@@ -107,90 +123,399 @@ const DEFAULT_DATA = [
 ];
 
 const TYPE_TAG = {
-  'LSD': 'lsd', 'LSD 축소': 'lsd',
-  '인터벌': 'interval', '인터벌 축소': 'interval',
-  '템포런': 'tempo', '가벼운 템포': 'tempo', '10km 테스트런': 'tempo',
-  '조깅': 'jog', '가벼운 조깅': 'jog',
-  '하프마라톤': 'race',
-  '완전 휴식': 'rest', '휴식': 'rest'
+  'LSD':'lsd','LSD 축소':'lsd',
+  '인터벌':'interval','인터벌 축소':'interval',
+  '템포런':'tempo','가벼운 템포':'tempo','10km 테스트런':'tempo',
+  '조깅':'jog','가벼운 조깅':'jog',
+  '하프마라톤':'race','10K 레이스':'race','5K 레이스':'race','풀마라톤':'race',
+  '완전 휴식':'rest','휴식':'rest'
 };
 
-let allData = [];
-let weekMap = {};
+// ── VDOT ──────────────────────────────────────────────
 
-function loadData() {
-  try {
-    const cached = localStorage.getItem(CACHE_KEY);
-    allData = cached ? JSON.parse(cached) : DEFAULT_DATA.map(r => [...r]);
-  } catch(e) {
-    allData = DEFAULT_DATA.map(r => [...r]);
-  }
-  if (!allData.length) allData = DEFAULT_DATA.map(r => [...r]);
-  saveData();
+function calcVDOT(distM, timeSec) {
+  const t = timeSec / 60, v = distM / t;
+  const pct = 0.8 + 0.1894393 * Math.exp(-0.012778 * t) + 0.2989558 * Math.exp(-0.1932605 * t);
+  const vo2 = -4.60 + 0.182258 * v + 0.000104 * v * v;
+  return Math.round(vo2 / pct * 10) / 10;
+}
+
+function paceSecFromFraction(vdot, frac) {
+  const vo2 = vdot * frac;
+  const a = 0.000104, b = 0.182258, c = -(4.60 + vo2);
+  const v = (-b + Math.sqrt(b * b - 4 * a * c)) / (2 * a); // m/min
+  return (1000 / v) * 60; // sec/km
+}
+
+function fmtPace(sec) {
+  const m = Math.floor(sec / 60), s = Math.round(sec % 60);
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+function fmtTime(sec) {
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = Math.round(sec % 60);
+  return h > 0 ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${m}:${String(s).padStart(2,'0')}`;
+}
+
+function getPaces(vdot) {
+  return {
+    easyF: paceSecFromFraction(vdot, 0.69),
+    easyS: paceSecFromFraction(vdot, 0.51),
+    tempoF: paceSecFromFraction(vdot, 0.84),
+    tempoS: paceSecFromFraction(vdot, 0.79),
+    intF: paceSecFromFraction(vdot, 1.00),
+    intS: paceSecFromFraction(vdot, 0.95),
+  };
+}
+
+function predictTime(vdot, distM, frac) {
+  const sec = paceSecFromFraction(vdot, frac);
+  return fmtTime(sec * distM / 1000);
+}
+
+// ── Plan Templates ─────────────────────────────────────
+
+const TEMPLATES = {
+  half: {
+    8:  [{t:'build',lsd:12,int:'400m × 6세트',tempo:20,easy:40},
+         {t:'build',lsd:14,int:'400m × 8세트',tempo:22,easy:40},
+         {t:'build',lsd:15,int:'800m × 4세트',tempo:24,easy:40},
+         {t:'build',lsd:16,int:'800m × 5세트',tempo:25,easy:40},
+         {t:'peak', lsd:17,int:'800m × 6세트',tempo:28,easy:50},
+         {t:'peak', lsd:18,int:'1000m × 5세트',tempo:30,easy:50},
+         {t:'taper',lsd:12,int:'400m × 4세트',tempo:20,easy:30}],
+    10: [{t:'build',lsd:12,int:'400m × 6세트',tempo:20,easy:40},
+         {t:'build',lsd:13,int:'400m × 8세트',tempo:22,easy:40},
+         {t:'build',lsd:14,int:'800m × 4세트',tempo:24,easy:40},
+         {t:'recover',lsd:10,int:null,tempo:0,easy:30},
+         {t:'build',lsd:15,int:'800m × 5세트',tempo:25,easy:40},
+         {t:'build',lsd:16,int:'800m × 6세트',tempo:27,easy:40},
+         {t:'peak', lsd:18,int:'1000m × 5세트',tempo:30,easy:50},
+         {t:'peak', lsd:20,int:'1000m × 6세트',tempo:30,easy:50},
+         {t:'taper',lsd:12,int:'400m × 4세트',tempo:20,easy:30}],
+    12: [{t:'build',lsd:10,int:'400m × 5세트',tempo:18,easy:40},
+         {t:'build',lsd:12,int:'400m × 6세트',tempo:20,easy:40},
+         {t:'build',lsd:13,int:'400m × 8세트',tempo:22,easy:40},
+         {t:'recover',lsd:10,int:null,tempo:0,easy:30},
+         {t:'build',lsd:14,int:'800m × 4세트',tempo:24,easy:40},
+         {t:'build',lsd:15,int:'800m × 5세트',tempo:25,easy:40},
+         {t:'build',lsd:16,int:'800m × 6세트',tempo:27,easy:40},
+         {t:'peak', lsd:17,int:'1000m × 5세트',tempo:28,easy:50},
+         {t:'peak', lsd:18,int:'1000m × 5세트',tempo:30,easy:50},
+         {t:'peak', lsd:20,int:'1000m × 6세트',tempo:30,easy:50},
+         {t:'taper',lsd:12,int:'400m × 4세트',tempo:20,easy:30}],
+  },
+  '10k': {
+    6:  [{t:'build',lsd:8, int:'400m × 5세트',tempo:15,easy:30},
+         {t:'build',lsd:10,int:'400m × 7세트',tempo:18,easy:35},
+         {t:'build',lsd:11,int:'800m × 4세트',tempo:20,easy:35},
+         {t:'peak', lsd:12,int:'800m × 5세트',tempo:22,easy:40},
+         {t:'peak', lsd:13,int:'800m × 6세트',tempo:24,easy:40},
+         {t:'taper',lsd:8, int:'400m × 3세트',tempo:15,easy:30}],
+    8:  [{t:'build',lsd:8, int:'400m × 5세트',tempo:15,easy:30},
+         {t:'build',lsd:9, int:'400m × 6세트',tempo:17,easy:30},
+         {t:'build',lsd:10,int:'400m × 8세트',tempo:18,easy:35},
+         {t:'build',lsd:11,int:'800m × 4세트',tempo:20,easy:35},
+         {t:'peak', lsd:12,int:'800m × 5세트',tempo:22,easy:40},
+         {t:'peak', lsd:13,int:'800m × 6세트',tempo:24,easy:40},
+         {t:'peak', lsd:14,int:'1000m × 4세트',tempo:25,easy:40},
+         {t:'taper',lsd:8, int:'400m × 3세트',tempo:15,easy:30}],
+  },
+  '5k': {
+    6:  [{t:'build',lsd:6, int:'400m × 4세트',tempo:10,easy:25},
+         {t:'build',lsd:7, int:'400m × 5세트',tempo:12,easy:25},
+         {t:'build',lsd:8, int:'400m × 6세트',tempo:14,easy:30},
+         {t:'peak', lsd:8, int:'800m × 4세트',tempo:15,easy:30},
+         {t:'peak', lsd:9, int:'800m × 5세트',tempo:16,easy:30},
+         {t:'taper',lsd:5, int:'400m × 3세트',tempo:10,easy:25}],
+  },
+  full: {
+    12: [{t:'build',lsd:16,int:'800m × 5세트',tempo:25,easy:50},
+         {t:'build',lsd:18,int:'800m × 6세트',tempo:28,easy:50},
+         {t:'build',lsd:20,int:'1000m × 5세트',tempo:30,easy:50},
+         {t:'recover',lsd:14,int:null,tempo:0,easy:40},
+         {t:'build',lsd:22,int:'1000m × 5세트',tempo:30,easy:50},
+         {t:'build',lsd:24,int:'1000m × 6세트',tempo:32,easy:60},
+         {t:'peak', lsd:26,int:'1200m × 5세트',tempo:35,easy:60},
+         {t:'peak', lsd:28,int:'1200m × 5세트',tempo:35,easy:60},
+         {t:'peak', lsd:30,int:'1000m × 6세트',tempo:35,easy:60},
+         {t:'taper',lsd:22,int:'800m × 4세트',tempo:25,easy:40},
+         {t:'taper',lsd:16,int:'400m × 4세트',tempo:20,easy:30}],
+    16: [{t:'build',lsd:12,int:'800m × 4세트',tempo:20,easy:40},
+         {t:'build',lsd:14,int:'800m × 5세트',tempo:22,easy:40},
+         {t:'build',lsd:16,int:'800m × 5세트',tempo:25,easy:50},
+         {t:'recover',lsd:12,int:null,tempo:0,easy:30},
+         {t:'build',lsd:18,int:'800m × 6세트',tempo:28,easy:50},
+         {t:'build',lsd:20,int:'1000m × 5세트',tempo:30,easy:50},
+         {t:'build',lsd:22,int:'1000m × 5세트',tempo:30,easy:50},
+         {t:'recover',lsd:16,int:null,tempo:0,easy:40},
+         {t:'build',lsd:24,int:'1000m × 6세트',tempo:32,easy:60},
+         {t:'peak', lsd:26,int:'1200m × 5세트',tempo:35,easy:60},
+         {t:'peak', lsd:28,int:'1200m × 5세트',tempo:35,easy:60},
+         {t:'peak', lsd:30,int:'1000m × 6세트',tempo:35,easy:60},
+         {t:'taper',lsd:24,int:'800m × 5세트',tempo:28,easy:50},
+         {t:'taper',lsd:18,int:'800m × 4세트',tempo:22,easy:40},
+         {t:'taper',lsd:12,int:'400m × 4세트',tempo:18,easy:30}],
+  },
+};
+
+const WEEKS_OPTIONS = { half:[8,10,12], '10k':[6,8], '5k':[6], full:[12,16] };
+const RACE_TYPE = { half:'하프마라톤', '10k':'10K 레이스', '5k':'5K 레이스', full:'풀마라톤' };
+const RACE_FRAC = { half:0.85, '10k':0.92, '5k':0.97, full:0.80 };
+const RACE_DIST = { half:21097, '10k':10000, '5k':5000, full:42195 };
+
+function generatePlanData(vdot, targetDist, numWeeks, startDateStr) {
+  const p = getPaces(vdot);
+  const easyStr = `${fmtPace(p.easyF)}-${fmtPace(p.easyS)}/km`;
+  const tempoStr = `${fmtPace(p.tempoF)}-${fmtPace(p.tempoS)}/km`;
+  const intStr = `${fmtPace(p.intF)}-${fmtPace(p.intS)}/km`;
+  const raceTime = predictTime(vdot, RACE_DIST[targetDist], RACE_FRAC[targetDist]);
+  const raceType = RACE_TYPE[targetDist];
+
+  const template = TEMPLATES[targetDist][numWeeks];
+  const startDate = new Date(startDateStr);
+  const rows = [];
+
+  template.forEach((wk, wi) => {
+    const wStart = new Date(startDate);
+    wStart.setDate(wStart.getDate() + wi * 7);
+    const wEnd = new Date(wStart);
+    wEnd.setDate(wEnd.getDate() + 6);
+    const dateRange = `${wStart.getMonth()+1}/${wStart.getDate()}-${wEnd.getMonth()+1}/${wEnd.getDate()}`;
+    const weekLabel = `${wi+1}주차`;
+
+    const badgeMap = {build:'빌드업',peak:'피크',taper:'테이퍼',recover:'회복'};
+
+    if (wk.t === 'recover') {
+      rows.push([wi,0,weekLabel,dateRange,'월','휴식','스트레칭 / 폼롤러','FALSE']);
+      rows.push([wi,1,weekLabel,dateRange,'화','가벼운 조깅',`30분 / Easy / ${easyStr}`,'FALSE']);
+      rows.push([wi,2,weekLabel,dateRange,'수','조깅',`${wk.easy}분 / Easy`,'FALSE']);
+      rows.push([wi,3,weekLabel,dateRange,'목','가벼운 템포',`15분 / ${tempoStr}`,'FALSE']);
+      rows.push([wi,4,weekLabel,dateRange,'금','조깅','30분 / 회복','FALSE']);
+      rows.push([wi,5,weekLabel,dateRange,'토','조깅',`${wk.easy}분 / Easy`,'FALSE']);
+      rows.push([wi,6,weekLabel,dateRange,'일','LSD',`${wk.lsd}km / ${easyStr} / 심박수 140-150`,'FALSE']);
+    } else {
+      rows.push([wi,0,weekLabel,dateRange,'월','조깅',`${wk.easy}분 / Easy / ${easyStr}`,'FALSE']);
+      rows.push([wi,1,weekLabel,dateRange,'화','인터벌',`${wk.int} / ${intStr} / 총 ${Math.round(parseInt(wk.int)*0.4)/10 || ''}km 내외`,'FALSE']);
+      rows.push([wi,2,weekLabel,dateRange,'수','조깅',`${wk.easy}분 / Easy / 심박수 140 이하`,'FALSE']);
+      rows.push([wi,3,weekLabel,dateRange,'목','템포런',`${wk.tempo}분 / ${tempoStr} / 심박수 165-175`,'FALSE']);
+      rows.push([wi,4,weekLabel,dateRange,'금','조깅','30분 / 회복','FALSE']);
+      rows.push([wi,5,weekLabel,dateRange,'토','조깅',`${wk.easy}분 / Easy / 내일 LSD 대비`,'FALSE']);
+      rows.push([wi,6,weekLabel,dateRange,'일','LSD',`${wk.lsd}km / ${easyStr} / 심박수 140-155`,'FALSE']);
+    }
+  });
+
+  // Race day
+  const raceWi = template.length;
+  const raceStart = new Date(startDate);
+  raceStart.setDate(raceStart.getDate() + raceWi * 7);
+  const raceDateStr = `${raceStart.getMonth()+1}월 ${raceStart.getDate()}일`;
+  rows.push([raceWi,0,'대회 당일',raceDateStr,'일',raceType,`목표: ${raceTime} / 페이스 조절 집중`,'FALSE']);
+
+  return rows;
+}
+
+// ── Storage ───────────────────────────────────────────
+
+let plans = [], currentPlanId = null, allData = [], weekMap = {};
+
+function loadPlans() {
+  try { return JSON.parse(localStorage.getItem(PLANS_KEY)) || []; } catch(e) { return []; }
+}
+function savePlans() { localStorage.setItem(PLANS_KEY, JSON.stringify(plans)); }
+
+function migrate() {
+  if (localStorage.getItem(PLANS_KEY)) return;
+  let data;
+  try { const l = localStorage.getItem(LEGACY_KEY); data = l ? JSON.parse(l) : DEFAULT_DATA.map(r=>[...r]); }
+  catch(e) { data = DEFAULT_DATA.map(r=>[...r]); }
+  plans = [{ id: Date.now(), title: '2026 봄 하프마라톤', createdAt: '2026-05-12', data }];
+  savePlans();
+}
+
+// ── Screens ───────────────────────────────────────────
+
+function showList() {
+  currentPlanId = null;
+  setScreen('screen-list');
+  renderList();
+}
+
+function showCreate() {
+  setScreen('screen-create');
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('startDate').value = today;
+  document.getElementById('newTitle').value = '';
+  document.getElementById('raceH').value = '';
+  document.getElementById('raceM').value = '';
+  document.getElementById('raceS').value = '';
+  document.getElementById('vdotPreview').style.display = 'none';
+  document.getElementById('btnGenerate').disabled = true;
+  updateWeeksOptions();
+}
+
+function showDetail(planId) {
+  const plan = plans.find(p => p.id === planId);
+  if (!plan) return;
+  currentPlanId = planId;
+  allData = plan.data;
+  setScreen('screen-detail');
+  document.getElementById('titleInput').value = plan.title;
   buildWeekMap();
   render();
   updateTotalProgress();
-  updateSyncBar('로컬 저장', true);
 }
 
-function saveData() {
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify(allData)); } catch(e) {}
+function setScreen(id) {
+  ['screen-list','screen-create','screen-detail'].forEach(s => {
+    document.getElementById(s).classList.toggle('active', s === id);
+  });
 }
+
+// ── List render ───────────────────────────────────────
+
+function renderList() {
+  const el = document.getElementById('planListContainer');
+  if (!plans.length) {
+    el.innerHTML = '<div class="empty-state">플랜이 없어요.<br>새 플랜을 만들어보세요.</div>';
+    return;
+  }
+  el.innerHTML = plans.map(plan => {
+    const total = plan.data.length;
+    const done = plan.data.filter(r => r[7]==='TRUE').length;
+    const pct = total ? Math.round(done/total*100) : 0;
+    const weekCount = new Set(plan.data.map(r=>r[0])).size;
+    const dateRows = plan.data.filter(r => String(r[3]).includes('-'));
+    const first = dateRows.length ? String(dateRows[0][3]).split('-')[0] : '';
+    const last = dateRows.length ? String(dateRows[dateRows.length-1][3]).split('-')[1] : '';
+    const meta = total ? `${first && last ? first+' – '+last+' · ' : ''}${weekCount}주 · ${done}/${total} 완료` : '운동 없음';
+    return `<div class="plan-card" onclick="showDetail(${plan.id})">
+      <div class="plan-card-body">
+        <div class="plan-card-title">${plan.title}</div>
+        <div class="plan-card-meta">${meta}</div>
+        <div class="plan-card-bar-wrap"><div class="plan-card-bar" style="width:${pct}%"></div></div>
+      </div>
+      <span class="plan-card-chev">›</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Create form ───────────────────────────────────────
+
+function updateWeeksOptions() {
+  const dist = document.getElementById('targetDist').value;
+  const sel = document.getElementById('numWeeks');
+  sel.innerHTML = WEEKS_OPTIONS[dist].map(w => `<option value="${w}">${w}주</option>`).join('');
+}
+
+function updatePreview() {
+  const dist = parseInt(document.getElementById('raceDist').value);
+  const h = parseInt(document.getElementById('raceH').value) || 0;
+  const m = parseInt(document.getElementById('raceM').value) || 0;
+  const s = parseInt(document.getElementById('raceS').value) || 0;
+  const totalSec = h*3600 + m*60 + s;
+  if (!totalSec || totalSec < 60) {
+    document.getElementById('vdotPreview').style.display = 'none';
+    document.getElementById('btnGenerate').disabled = true;
+    return;
+  }
+  const vdot = calcVDOT(dist, totalSec);
+  if (vdot < 20 || vdot > 85) {
+    document.getElementById('vdotPreview').style.display = 'none';
+    document.getElementById('btnGenerate').disabled = true;
+    return;
+  }
+  const p = getPaces(vdot);
+  document.getElementById('vdotVal').textContent = vdot;
+  document.getElementById('pEasy').textContent = `${fmtPace(p.easyF)}-${fmtPace(p.easyS)}/km`;
+  document.getElementById('pTempo').textContent = `${fmtPace(p.tempoF)}-${fmtPace(p.tempoS)}/km`;
+  document.getElementById('pInterval').textContent = `${fmtPace(p.intF)}-${fmtPace(p.intS)}/km`;
+  document.getElementById('vdotPreview').style.display = 'block';
+  document.getElementById('btnGenerate').disabled = false;
+}
+
+function generateNewPlan() {
+  const dist = parseInt(document.getElementById('raceDist').value);
+  const h = parseInt(document.getElementById('raceH').value)||0;
+  const m = parseInt(document.getElementById('raceM').value)||0;
+  const s = parseInt(document.getElementById('raceS').value)||0;
+  const vdot = calcVDOT(dist, h*3600+m*60+s);
+  const targetDist = document.getElementById('targetDist').value;
+  const numWeeks = parseInt(document.getElementById('numWeeks').value);
+  const startDate = document.getElementById('startDate').value || new Date().toISOString().split('T')[0];
+  const title = document.getElementById('newTitle').value.trim() || '새 플랜';
+
+  const data = generatePlanData(vdot, targetDist, numWeeks, startDate);
+  const plan = { id: Date.now(), title, createdAt: startDate, data };
+  plans.push(plan);
+  savePlans();
+  showDetail(plan.id);
+}
+
+// ── Plan title / delete ───────────────────────────────
+
+function savePlanTitle() {
+  const plan = plans.find(p => p.id === currentPlanId);
+  if (!plan) return;
+  plan.title = document.getElementById('titleInput').value.trim() || '이름 없는 플랜';
+  savePlans();
+}
+
+function deletePlan() {
+  if (!confirm('이 플랜을 삭제하시겠어요? 되돌릴 수 없습니다.')) return;
+  plans = plans.filter(p => p.id !== currentPlanId);
+  savePlans();
+  showList();
+}
+
+// ── Detail render ─────────────────────────────────────
 
 function buildWeekMap() {
   weekMap = {};
   allData.forEach(row => {
     const wi = row[0];
     if (!weekMap[wi]) weekMap[wi] = { label: row[2], date: row[3], days: [] };
-    weekMap[wi].days.push({ di: row[1], day: row[4], type: row[5], detail: row[6], checked: row[7] === 'TRUE' });
+    weekMap[wi].days.push({ di: row[1], day: row[4], type: row[5], detail: row[6], checked: row[7]==='TRUE' });
   });
 }
 
 function getBadge(label) {
-  if (label.includes('대회')) return ['race', '레이스'];
-  if (label.includes('3주차')) return ['recover', '회복'];
-  if (label.includes('7주차')) return ['recover', '테이퍼'];
-  if (label.includes('6주차') || label.includes('8주차')) return ['peak', '피크'];
-  return ['build', '빌드업'];
+  if (label.includes('대회')) return ['race','레이스'];
+  if (label.includes('회복') || label.includes('3주차')) return ['recover','회복'];
+  if (label.includes('테이퍼') || label.includes('7주차')) return ['taper','테이퍼'];
+  if (label.includes('피크') || label.includes('6주차') || label.includes('8주차')) return ['peak','피크'];
+  return ['build','빌드업'];
 }
 
 function render() {
   const app = document.getElementById('app');
-  const wiKeys = Object.keys(weekMap).sort((a,b) => a-b);
+  const wiKeys = Object.keys(weekMap).sort((a,b)=>a-b);
+  if (!wiKeys.length) { app.innerHTML = '<div class="loading-screen">아직 운동이 없어요</div>'; return; }
 
-  let html = `<div class="vdot-box">
-    <div class="vdot-title">VDOT 기준 페이스</div>
-    <div class="vdot-grid">
-      <div class="vdot-item">Easy <span>6:19-7:55/km</span></div>
-      <div class="vdot-item">Threshold <span>5:19-5:38/km</span></div>
-      <div class="vdot-item">Interval <span>4:41-4:55/km</span></div>
-      <div class="vdot-item">하프 예상 <span>1:52:59</span></div>
-    </div>
-  </div>`;
+  let html = `<div class="vdot-box"><div class="vdot-title">훈련 페이스 참고</div><div class="vdot-grid">
+    <div class="vdot-item">Easy <span>${getVdotNote('easy')}</span></div>
+    <div class="vdot-item">Tempo <span>${getVdotNote('tempo')}</span></div>
+    <div class="vdot-item">Interval <span>${getVdotNote('interval')}</span></div>
+    <div class="vdot-item">예상 기록 <span>${getVdotNote('race')}</span></div>
+  </div></div>`;
 
   wiKeys.forEach(wi => {
     const w = weekMap[wi];
-    const done = w.days.filter(d => d.checked).length;
-    const total = w.days.length;
+    const done = w.days.filter(d=>d.checked).length;
     const [badgeClass, badgeText] = getBadge(w.label);
-    const isOpen = wi == 0 ? 'open' : '';
-
+    const isOpen = wi == wiKeys[0] ? 'open' : '';
     html += `<div class="week-block">
       <div class="week-header" onclick="toggleWeek(${wi})">
-        <div style="flex:1">
-          <div class="week-title">${w.label} <span class="week-date">${w.date}</span></div>
-        </div>
+        <div style="flex:1"><div class="week-title">${w.label} <span class="week-date">${w.date}</span></div></div>
         <span class="badge badge-${badgeClass}">${badgeText}</span>
-        <span class="week-progress">${done}/${total}</span>
+        <span class="week-progress" id="wp-${wi}">${done}/${w.days.length}</span>
         <span class="chev ${isOpen}" id="chev-${wi}">▾</span>
       </div>
       <div class="week-body ${isOpen}" id="body-${wi}">
         ${w.days.map(d => {
-          const tag = TYPE_TAG[d.type] || 'jog';
-          const checkedClass = d.checked ? 'checked' : '';
-          const doneClass = d.checked ? 'done' : '';
-          return `<div class="day-row ${doneClass}" id="row-${wi}-${d.di}">
-            <div class="checkbox ${checkedClass}" id="cb-${wi}-${d.di}" onclick="toggleCheck(${wi},${d.di})"></div>
+          const tag = TYPE_TAG[d.type]||'jog';
+          return `<div class="day-row ${d.checked?'done':''}" id="row-${wi}-${d.di}">
+            <div class="checkbox ${d.checked?'checked':''}" id="cb-${wi}-${d.di}" onclick="toggleCheck(${wi},${d.di})"></div>
             <div class="day-label">${d.day}</div>
             <div class="day-content">
               <div class="day-type"><span class="tag tag-${tag}">${d.type}</span></div>
@@ -202,61 +527,64 @@ function render() {
     </div>`;
   });
 
+  html += `<button class="btn-delete" onclick="deletePlan()">플랜 삭제</button>`;
   app.innerHTML = html;
 }
 
+function getVdotNote(type) {
+  // Extract pace info from first workout of relevant type
+  for (const row of allData) {
+    const detail = row[6] || '';
+    if (type==='easy' && row[5]==='LSD') { const m = detail.match(/[\d:]+\/km/); if(m) return m[0]; }
+    if (type==='tempo' && row[5]==='템포런') { const m = detail.match(/[\d:]+-[\d:]+\/km/); if(m) return m[0]; }
+    if (type==='interval' && row[5]==='인터벌') { const m = detail.match(/[\d:]+-[\d:]+\/km/); if(m) return m[0]; }
+    if (type==='race' && (row[5]==='하프마라톤'||row[5]==='10K 레이스'||row[5]==='5K 레이스'||row[5]==='풀마라톤')) {
+      const m = detail.match(/[\d:]+:[0-9]{2}/); if(m) return m[0];
+    }
+  }
+  return '-';
+}
+
 function toggleWeek(wi) {
-  const body = document.getElementById('body-' + wi);
-  const chev = document.getElementById('chev-' + wi);
-  body.classList.toggle('open');
-  chev.classList.toggle('open');
+  document.getElementById('body-'+wi).classList.toggle('open');
+  document.getElementById('chev-'+wi).classList.toggle('open');
 }
 
 function toggleCheck(wi, di) {
-  const cb = document.getElementById('cb-' + wi + '-' + di);
-  const row = document.getElementById('row-' + wi + '-' + di);
+  const cb = document.getElementById('cb-'+wi+'-'+di);
+  const row = document.getElementById('row-'+wi+'-'+di);
   const nowChecked = !cb.classList.contains('checked');
-
   cb.classList.toggle('checked', nowChecked);
   row.classList.toggle('done', nowChecked);
-
-  const entry = weekMap[wi].days.find(d => d.di == di);
+  const entry = weekMap[wi].days.find(d=>d.di==di);
   if (entry) entry.checked = nowChecked;
-
-  const dataRow = allData.find(r => r[0] == wi && r[1] == di);
-  if (dataRow) dataRow[7] = nowChecked ? 'TRUE' : 'FALSE';
-
-  saveData();
-  updateWeekProgress(wi);
+  const dataRow = allData.find(r=>r[0]==wi&&r[1]==di);
+  if (dataRow) dataRow[7] = nowChecked?'TRUE':'FALSE';
+  saveCurrentPlan();
+  document.getElementById('wp-'+wi).textContent =
+    weekMap[wi].days.filter(d=>d.checked).length + '/' + weekMap[wi].days.length;
   updateTotalProgress();
 }
 
-function updateWeekProgress(wi) {
-  const w = weekMap[wi];
-  const done = w.days.filter(d => d.checked).length;
-  const total = w.days.length;
-  const el = document.querySelector('#body-' + wi + ' ~ .week-header .week-progress') ||
-    document.querySelector('[id="chev-' + wi + '"]').previousElementSibling;
-  if (el) el.textContent = done + '/' + total;
+function saveCurrentPlan() {
+  const plan = plans.find(p=>p.id===currentPlanId);
+  if (plan) { plan.data = allData; savePlans(); }
 }
 
 function updateTotalProgress() {
-  let done = 0, total = 0;
-  Object.values(weekMap).forEach(w => {
-    done += w.days.filter(d => d.checked).length;
-    total += w.days.length;
-  });
-  const pct = total > 0 ? Math.round(done / total * 100) : 0;
-  document.getElementById('totalProgress').style.width = pct + '%';
+  let done=0, total=0;
+  Object.values(weekMap).forEach(w=>{ done+=w.days.filter(d=>d.checked).length; total+=w.days.length; });
+  document.getElementById('totalProgress').style.width = (total?Math.round(done/total*100):0)+'%';
 }
 
-function updateSyncBar(msg, ok) {
-  const el = document.getElementById('syncBar');
-  el.textContent = msg;
-  el.className = 'sync-bar ok';
-}
-
-loadData();
+// ── Init ──────────────────────────────────────────────
+migrate();
+plans = loadPlans();
+// 운동 없는 빈 플랜 제거
+const beforeCount = plans.length;
+plans = plans.filter(p => p.data && p.data.length > 0);
+if (plans.length !== beforeCount) savePlans();
+showList();
 </script>
 </body>
 </html>
