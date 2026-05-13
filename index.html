@@ -24,7 +24,7 @@
 <div id="screen-create" class="screen">
   <header class="top-header">
     <div class="top-header-row">
-      <button class="back-btn" onclick="showList()" aria-label="취소"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+      <button class="back-btn" onclick="history.back()" aria-label="취소"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
       <span class="top-header-title">새 플랜 만들기</span>
     </div>
   </header>
@@ -73,8 +73,17 @@
       <input class="form-input" id="startDate" type="date" />
     </div>
     <div class="form-section">
-      <label class="form-label">훈련 기간</label>
-      <select class="form-select" id="numWeeks"></select>
+      <label class="form-label">훈련 기간 설정</label>
+      <div class="segment-control">
+        <button type="button" class="segment-btn active" id="segWeeks" onclick="setPeriodMode('weeks')">기간으로</button>
+        <button type="button" class="segment-btn" id="segDate" onclick="setPeriodMode('date')">대회일로</button>
+      </div>
+      <div id="modeWeeks">
+        <select class="form-select" id="numWeeks"></select>
+      </div>
+      <div id="modeDate" style="display:none">
+        <input class="form-input" id="raceDate" type="date" />
+      </div>
     </div>
     <button class="btn-generate" id="btnGenerate" onclick="generateNewPlan()" disabled>플랜 생성하기</button>
   </div>
@@ -84,7 +93,7 @@
 <div id="screen-detail" class="screen">
   <header class="top-header">
     <div class="top-header-row">
-      <button class="back-btn" onclick="showList()" aria-label="뒤로"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+      <button class="back-btn" onclick="history.back()" aria-label="뒤로"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
       <input class="title-input" id="titleInput" type="text" placeholder="플랜 이름"
              onblur="savePlanTitle()" onkeydown="if(event.key==='Enter')this.blur()" />
     </div>
@@ -92,6 +101,8 @@
   </header>
   <div class="container" id="app"></div>
 </div>
+
+<div class="snackbar" id="snackbar"></div>
 
 <script>
 const PLANS_KEY = 'running_plans';
@@ -177,6 +188,12 @@ function predictTime(vdot, distM, frac) {
 
 const TEMPLATES = {
   half: {
+    6:  [{t:'build',lsd:12,int:'400m × 6세트',tempo:20,easy:40},
+         {t:'build',lsd:14,int:'800m × 4세트',tempo:22,easy:40},
+         {t:'peak', lsd:16,int:'800m × 5세트',tempo:25,easy:40},
+         {t:'peak', lsd:18,int:'1000m × 4세트',tempo:28,easy:50},
+         {t:'taper',lsd:13,int:'400m × 4세트',tempo:20,easy:30},
+         {t:'taper',lsd:10,int:'400m × 3세트',tempo:15,easy:25}],
     8:  [{t:'build',lsd:12,int:'400m × 6세트',tempo:20,easy:40},
          {t:'build',lsd:14,int:'400m × 8세트',tempo:22,easy:40},
          {t:'build',lsd:15,int:'800m × 4세트',tempo:24,easy:40},
@@ -206,6 +223,10 @@ const TEMPLATES = {
          {t:'taper',lsd:12,int:'400m × 4세트',tempo:20,easy:30}],
   },
   '10k': {
+    4:  [{t:'build',lsd:8, int:'400m × 5세트',tempo:15,easy:30},
+         {t:'peak', lsd:10,int:'800m × 4세트',tempo:18,easy:35},
+         {t:'peak', lsd:11,int:'800m × 5세트',tempo:20,easy:35},
+         {t:'taper',lsd:7, int:'400m × 3세트',tempo:12,easy:25}],
     6:  [{t:'build',lsd:8, int:'400m × 5세트',tempo:15,easy:30},
          {t:'build',lsd:10,int:'400m × 7세트',tempo:18,easy:35},
          {t:'build',lsd:11,int:'800m × 4세트',tempo:20,easy:35},
@@ -222,6 +243,10 @@ const TEMPLATES = {
          {t:'taper',lsd:8, int:'400m × 3세트',tempo:15,easy:30}],
   },
   '5k': {
+    4:  [{t:'build',lsd:6, int:'400m × 4세트',tempo:10,easy:25},
+         {t:'peak', lsd:7, int:'400m × 6세트',tempo:12,easy:25},
+         {t:'peak', lsd:8, int:'800m × 4세트',tempo:14,easy:30},
+         {t:'taper',lsd:5, int:'200m × 4세트',tempo:8, easy:20}],
     6:  [{t:'build',lsd:6, int:'400m × 4세트',tempo:10,easy:25},
          {t:'build',lsd:7, int:'400m × 5세트',tempo:12,easy:25},
          {t:'build',lsd:8, int:'400m × 6세트',tempo:14,easy:30},
@@ -230,6 +255,14 @@ const TEMPLATES = {
          {t:'taper',lsd:5, int:'400m × 3세트',tempo:10,easy:25}],
   },
   full: {
+    8:  [{t:'build',lsd:16,int:'800m × 5세트',tempo:25,easy:50},
+         {t:'build',lsd:20,int:'1000m × 5세트',tempo:28,easy:50},
+         {t:'peak', lsd:24,int:'1200m × 4세트',tempo:32,easy:60},
+         {t:'peak', lsd:28,int:'1200m × 5세트',tempo:35,easy:60},
+         {t:'recover',lsd:20,int:null,tempo:0,easy:40},
+         {t:'peak', lsd:26,int:'1000m × 5세트',tempo:32,easy:60},
+         {t:'taper',lsd:18,int:'800m × 4세트',tempo:22,easy:40},
+         {t:'taper',lsd:12,int:'400m × 4세트',tempo:18,easy:30}],
     12: [{t:'build',lsd:16,int:'800m × 5세트',tempo:25,easy:50},
          {t:'build',lsd:18,int:'800m × 6세트',tempo:28,easy:50},
          {t:'build',lsd:20,int:'1000m × 5세트',tempo:30,easy:50},
@@ -259,16 +292,57 @@ const TEMPLATES = {
   },
 };
 
-const WEEKS_OPTIONS = { half:[8,10,12], '10k':[6,8], '5k':[6], full:[12,16] };
+const WEEKS_OPTIONS = { half:[6,8,10,12], '10k':[4,6,8], '5k':[4,6], full:[8,12,16] };
 const RACE_TYPE = { half:'하프마라톤', '10k':'10K 레이스', '5k':'5K 레이스', full:'풀마라톤' };
 const RACE_FRAC = { half:0.85, '10k':0.92, '5k':0.97, full:0.80 };
 const RACE_DIST = { half:21097, '10k':10000, '5k':5000, full:42195 };
 
-function generatePlanData(vdot, targetDist, numWeeks, startDateStr) {
+const DAYS_KO = ['일','월','화','수','목','금','토'];
+
+// 요일별 워크아웃 (dayOfWeek: 0=일, 1=월, 2=화, 3=수, 4=목, 5=금, 6=토)
+function workoutForDay(dayOfWeek, wk, paces) {
+  const { easyStr, tempoStr, intStr } = paces;
+  if (wk.t === 'recover') {
+    switch (dayOfWeek) {
+      case 1: return ['휴식', '스트레칭 / 폼롤러'];
+      case 2: return ['가벼운 조깅', `30분 / ${easyStr} / Zone 1`];
+      case 3: return ['조깅', `${wk.easy}분 / Zone 2`];
+      case 4: return ['가벼운 템포', `15분 / ${tempoStr} / Zone 3`];
+      case 5: return ['조깅', '30분 / Zone 1 / 회복'];
+      case 6: return ['조깅', `${wk.easy}분 / Zone 2`];
+      case 0: return ['LSD', `${wk.lsd}km / ${easyStr} / Zone 2`];
+    }
+  } else {
+    switch (dayOfWeek) {
+      case 1: return ['조깅', `${wk.easy}분 / Zone 2 / ${easyStr}`];
+      case 2: return ['인터벌', `${wk.int} / ${intStr} / Zone 5`];
+      case 3: return ['조깅', `${wk.easy}분 / Zone 2`];
+      case 4: return ['템포런', `${wk.tempo}분 / ${tempoStr} / Zone 4`];
+      case 5: return ['조깅', '30분 / Zone 1 / 회복'];
+      case 6: return ['조깅', `${wk.easy}분 / Zone 2 / 내일 LSD 대비`];
+      case 0: return ['LSD', `${wk.lsd}km / ${easyStr} / Zone 2`];
+    }
+  }
+}
+
+// 대회 주차 일별 워크아웃 (daysToRace: 레이스까지 남은 일수)
+function preRaceWorkout(daysToRace) {
+  if (daysToRace >= 6) return ['조깅', '40분 / Zone 2'];
+  if (daysToRace === 5) return ['조깅', '40분 / Zone 2'];
+  if (daysToRace === 4) return ['가벼운 인터벌', '200m × 4세트 / Zone 4 / 다리 살리기'];
+  if (daysToRace === 3) return ['조깅', '30분 / Zone 2'];
+  if (daysToRace === 2) return ['완전 휴식', '충분한 수면 / 탄수화물 로딩'];
+  if (daysToRace === 1) return ['가벼운 조깅', '20분 / Zone 1 / 다리 풀기'];
+  return ['조깅', '40분 / Zone 2'];
+}
+
+function generatePlanData(vdot, targetDist, numWeeks, startDateStr, raceDateOverride) {
   const p = getPaces(vdot);
-  const easyStr = `${fmtPace(p.easyF)}-${fmtPace(p.easyS)}/km`;
-  const tempoStr = `${fmtPace(p.tempoF)}-${fmtPace(p.tempoS)}/km`;
-  const intStr = `${fmtPace(p.intF)}-${fmtPace(p.intS)}/km`;
+  const paces = {
+    easyStr:  `${fmtPace(p.easyF)}-${fmtPace(p.easyS)}/km`,
+    tempoStr: `${fmtPace(p.tempoF)}-${fmtPace(p.tempoS)}/km`,
+    intStr:   `${fmtPace(p.intF)}-${fmtPace(p.intS)}/km`,
+  };
   const raceTime = predictTime(vdot, RACE_DIST[targetDist], RACE_FRAC[targetDist]);
   const raceType = RACE_TYPE[targetDist];
 
@@ -276,6 +350,7 @@ function generatePlanData(vdot, targetDist, numWeeks, startDateStr) {
   const startDate = new Date(startDateStr);
   const rows = [];
 
+  // ── 훈련 주차 ──
   template.forEach((wk, wi) => {
     const wStart = new Date(startDate);
     wStart.setDate(wStart.getDate() + wi * 7);
@@ -284,33 +359,51 @@ function generatePlanData(vdot, targetDist, numWeeks, startDateStr) {
     const dateRange = `${wStart.getMonth()+1}/${wStart.getDate()}-${wEnd.getMonth()+1}/${wEnd.getDate()}`;
     const weekLabel = `${wi+1}주차`;
 
-    const badgeMap = {build:'빌드업',peak:'피크',taper:'테이퍼',recover:'회복'};
-
-    if (wk.t === 'recover') {
-      rows.push([wi,0,weekLabel,dateRange,'월','휴식','스트레칭 / 폼롤러','FALSE']);
-      rows.push([wi,1,weekLabel,dateRange,'화','가벼운 조깅',`30분 / Easy / ${easyStr}`,'FALSE']);
-      rows.push([wi,2,weekLabel,dateRange,'수','조깅',`${wk.easy}분 / Easy`,'FALSE']);
-      rows.push([wi,3,weekLabel,dateRange,'목','가벼운 템포',`15분 / ${tempoStr}`,'FALSE']);
-      rows.push([wi,4,weekLabel,dateRange,'금','조깅','30분 / 회복','FALSE']);
-      rows.push([wi,5,weekLabel,dateRange,'토','조깅',`${wk.easy}분 / Easy`,'FALSE']);
-      rows.push([wi,6,weekLabel,dateRange,'일','LSD',`${wk.lsd}km / ${easyStr} / 심박수 140-150`,'FALSE']);
-    } else {
-      rows.push([wi,0,weekLabel,dateRange,'월','조깅',`${wk.easy}분 / Easy / ${easyStr}`,'FALSE']);
-      rows.push([wi,1,weekLabel,dateRange,'화','인터벌',`${wk.int} / ${intStr} / 총 ${Math.round(parseInt(wk.int)*0.4)/10 || ''}km 내외`,'FALSE']);
-      rows.push([wi,2,weekLabel,dateRange,'수','조깅',`${wk.easy}분 / Easy / 심박수 140 이하`,'FALSE']);
-      rows.push([wi,3,weekLabel,dateRange,'목','템포런',`${wk.tempo}분 / ${tempoStr} / 심박수 165-175`,'FALSE']);
-      rows.push([wi,4,weekLabel,dateRange,'금','조깅','30분 / 회복','FALSE']);
-      rows.push([wi,5,weekLabel,dateRange,'토','조깅',`${wk.easy}분 / Easy / 내일 LSD 대비`,'FALSE']);
-      rows.push([wi,6,weekLabel,dateRange,'일','LSD',`${wk.lsd}km / ${easyStr} / 심박수 140-155`,'FALSE']);
+    for (let di = 0; di < 7; di++) {
+      const date = new Date(wStart);
+      date.setDate(date.getDate() + di);
+      const dow = date.getDay();
+      const [type, detail] = workoutForDay(dow, wk, paces);
+      rows.push([wi, di, weekLabel, dateRange, DAYS_KO[dow], type, detail, 'FALSE']);
     }
   });
 
-  // Race day
+  // ── 대회 주차 (훈련 주차 바로 다음부터 대회 당일까지) ──
   const raceWi = template.length;
-  const raceStart = new Date(startDate);
-  raceStart.setDate(raceStart.getDate() + raceWi * 7);
-  const raceDateStr = `${raceStart.getMonth()+1}월 ${raceStart.getDate()}일`;
-  rows.push([raceWi,0,'대회 당일',raceDateStr,'일',raceType,`목표: ${raceTime} / 페이스 조절 집중`,'FALSE']);
+  const raceWeekStart = new Date(startDate);
+  raceWeekStart.setDate(raceWeekStart.getDate() + raceWi * 7);
+
+  const raceDate = raceDateOverride ? new Date(raceDateOverride) : (() => {
+    // 기간 모드: 대회 주차 시작 후 7일째(일요일이 되도록 맞춤)를 대회일로 설정
+    const d = new Date(raceWeekStart);
+    const dow = d.getDay();
+    const daysToSun = dow === 0 ? 0 : 7 - dow;
+    d.setDate(d.getDate() + daysToSun);
+    return d;
+  })();
+
+  const raceDayMs = raceDate.getTime();
+  const raceWeekStartMs = raceWeekStart.getTime();
+  const daysInRaceWeek = Math.max(1, Math.round((raceDayMs - raceWeekStartMs) / 86400000) + 1);
+  const raceDateLabel = `${raceDate.getMonth()+1}월 ${raceDate.getDate()}일`;
+  const raceWeekEndLabel = `${raceDate.getMonth()+1}/${raceDate.getDate()}`;
+  const raceWeekStartLabel = `${raceWeekStart.getMonth()+1}/${raceWeekStart.getDate()}`;
+  const raceWeekRange = `${raceWeekStartLabel}-${raceWeekEndLabel}`;
+
+  for (let di = 0; di < daysInRaceWeek; di++) {
+    const date = new Date(raceWeekStart);
+    date.setDate(date.getDate() + di);
+    const dow = date.getDay();
+    const daysToRace = daysInRaceWeek - 1 - di;
+    let type, detail;
+    if (daysToRace === 0) {
+      type = raceType;
+      detail = `목표: ${raceTime} / Zone 3-4 / 초반 페이스 억제`;
+    } else {
+      [type, detail] = preRaceWorkout(daysToRace);
+    }
+    rows.push([raceWi, di, '대회 주차', raceWeekRange, DAYS_KO[dow], type, detail, 'FALSE']);
+  }
 
   return rows;
 }
@@ -341,6 +434,12 @@ function showList() {
   renderList();
 }
 
+function _pushScreen(state) {
+  history.pushState(state, '');
+}
+
+let periodMode = 'weeks';
+
 function showCreate() {
   setScreen('screen-create');
   const today = new Date().toISOString().split('T')[0];
@@ -349,12 +448,32 @@ function showCreate() {
   document.getElementById('raceH').value = '';
   document.getElementById('raceM').value = '';
   document.getElementById('raceS').value = '';
+  document.getElementById('raceDate').value = '';
   document.getElementById('vdotPreview').style.display = 'none';
   document.getElementById('btnGenerate').disabled = true;
+  setPeriodMode('weeks');
   updateWeeksOptions();
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  _pushScreen({ screen: 'create' });
 }
 
-function showDetail(planId) {
+function setPeriodMode(mode) {
+  periodMode = mode;
+  document.getElementById('segWeeks').classList.toggle('active', mode === 'weeks');
+  document.getElementById('segDate').classList.toggle('active', mode === 'date');
+  document.getElementById('modeWeeks').style.display = mode === 'weeks' ? 'block' : 'none';
+  document.getElementById('modeDate').style.display = mode === 'date' ? 'block' : 'none';
+}
+
+function showSnackbar(message) {
+  const sb = document.getElementById('snackbar');
+  sb.textContent = message;
+  sb.classList.add('show');
+  clearTimeout(window._sbTimer);
+  window._sbTimer = setTimeout(() => sb.classList.remove('show'), 2800);
+}
+
+function showDetail(planId, pushHistory = true) {
   const plan = plans.find(p => p.id === planId);
   if (!plan) return;
   currentPlanId = planId;
@@ -364,6 +483,7 @@ function showDetail(planId) {
   buildWeekMap();
   render();
   updateTotalProgress();
+  if (pushHistory) _pushScreen({ screen: 'detail', planId });
 }
 
 function setScreen(id) {
@@ -441,15 +561,49 @@ function generateNewPlan() {
   const s = parseInt(document.getElementById('raceS').value)||0;
   const vdot = calcVDOT(dist, h*3600+m*60+s);
   const targetDist = document.getElementById('targetDist').value;
-  const numWeeks = parseInt(document.getElementById('numWeeks').value);
   const startDate = document.getElementById('startDate').value || new Date().toISOString().split('T')[0];
   const title = document.getElementById('newTitle').value.trim() || '새 플랜';
 
-  const data = generatePlanData(vdot, targetDist, numWeeks, startDate);
+  let numWeeks;
+  let raceDateOverride = null;
+  if (periodMode === 'date') {
+    const raceDateStr = document.getElementById('raceDate').value;
+    if (!raceDateStr) {
+      showSnackbar('대회 날짜를 선택해주세요');
+      return;
+    }
+    const raceDate = new Date(raceDateStr);
+    const start = new Date(startDate);
+    if (raceDate <= start) {
+      showSnackbar('대회일이 시작일보다 앞에 있어요');
+      return;
+    }
+    // 대회 주차(1주)를 제외한 순수 훈련 가능 주수 계산
+    const totalDays = Math.floor((raceDate - start) / 86400000);
+    const trainingWeeks = Math.max(0, Math.floor(totalDays / 7) - 1);
+
+    // 초과하지 않는 가장 큰 템플릿 선택
+    const available = WEEKS_OPTIONS[targetDist];
+    const fits = available.filter(w => w <= trainingWeeks);
+    if (fits.length === 0) {
+      const minNeeded = available[0] + 1; // 최소 훈련주 + 대회 주차
+      showSnackbar(`${RACE_TYPE[targetDist]} 플랜은 최소 ${minNeeded}주 필요해요`);
+      return;
+    }
+    numWeeks = fits[fits.length - 1]; // 초과하지 않는 가장 큰 값
+    raceDateOverride = raceDateStr;
+  } else {
+    numWeeks = parseInt(document.getElementById('numWeeks').value);
+  }
+
+  const data = generatePlanData(vdot, targetDist, numWeeks, startDate, raceDateOverride);
   const plan = { id: Date.now(), title, createdAt: startDate, data };
   plans.push(plan);
   savePlans();
-  showDetail(plan.id);
+  showDetail(plan.id, false); // history는 replaceState로 처리
+  history.replaceState({ screen: 'detail', planId: plan.id }, '');
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  showSnackbar(`${data.length}일간의 플랜이 생성되었어요`);
 }
 
 // ── Plan title / delete ───────────────────────────────
@@ -580,10 +734,22 @@ function updateTotalProgress() {
 // ── Init ──────────────────────────────────────────────
 migrate();
 plans = loadPlans();
-// 운동 없는 빈 플랜 제거
 const beforeCount = plans.length;
 plans = plans.filter(p => p.data && p.data.length > 0);
 if (plans.length !== beforeCount) savePlans();
+
+// 브라우저 뒤로가기 연동
+window.addEventListener('popstate', (e) => {
+  const state = e.state || {};
+  if (state.screen === 'detail' && state.planId) {
+    showDetail(state.planId, false);
+  } else {
+    showList();
+  }
+});
+
+// 초기 상태 등록
+history.replaceState({ screen: 'list' }, '');
 showList();
 </script>
 </body>

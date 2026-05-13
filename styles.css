@@ -555,6 +555,8 @@ button, input, select {
 
 .form-input {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   height: 52px;
   border: 1px solid var(--border);
   border-radius: var(--r-md);
@@ -566,6 +568,8 @@ button, input, select {
   outline: none;
   transition: border-color 0.15s;
   letter-spacing: -0.1px;
+  -webkit-appearance: none;
+  appearance: none;
 }
 .form-input::placeholder {
   color: var(--text-3);
@@ -573,6 +577,24 @@ button, input, select {
 }
 .form-input:focus {
   border-color: var(--text);
+}
+
+/* iOS Safari date input fix */
+.form-input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-height: 52px;
+  font-family: inherit;
+  text-align: left;
+}
+.form-input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+  width: 100%;
+}
+.form-input[type="date"]::-webkit-calendar-picker-indicator {
+  margin-left: auto;
+  opacity: 0.6;
 }
 
 .form-select {
@@ -679,4 +701,66 @@ button, input, select {
   margin-top: var(--sp-1);
   text-transform: none;
   font-variant-numeric: tabular-nums;
+}
+
+/* =====================================
+   SEGMENT CONTROL (Period mode toggle)
+   ===================================== */
+.segment-control {
+  display: flex;
+  background: var(--surface-soft);
+  border-radius: var(--r-md);
+  padding: 3px;
+  margin-bottom: var(--sp-3);
+  gap: 2px;
+}
+.segment-btn {
+  flex: 1;
+  height: 36px;
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--r-md) - 3px);
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  letter-spacing: -0.1px;
+}
+.segment-btn:hover {
+  color: var(--text);
+}
+.segment-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.04);
+}
+
+/* =====================================
+   SNACKBAR
+   ===================================== */
+.snackbar {
+  position: fixed;
+  bottom: var(--sp-6);
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--text);
+  color: var(--surface);
+  padding: var(--sp-3) var(--sp-5);
+  border-radius: var(--r-md);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.1px;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 100;
+  pointer-events: none;
+  white-space: nowrap;
+  max-width: calc(100vw - var(--sp-8));
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.08);
+}
+.snackbar.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
