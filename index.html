@@ -186,118 +186,238 @@ function predictTime(vdot, distM, frac) {
 
 // ── Plan Templates ─────────────────────────────────────
 
+// ── 기간 모드 패턴 (대회 주차 없음, 순수 훈련 블록) ──
+// 규칙: 4주 단위 사이클 [빌드·빌드·피크·회복] 반복
+const PERIOD_PATTERNS = {
+  4:  ['build','peak','recover','recover'],
+  6:  ['build','build','peak','recover','build','recover'],
+  8:  ['build','build','peak','recover','build','build','peak','recover'],
+  10: ['build','build','peak','recover','build','build','peak','recover','build','recover'],
+  12: ['build','build','peak','recover','build','build','peak','recover','build','build','peak','recover'],
+};
+
+// 기간 모드용 패턴 → 템플릿 변환
+function patternToTemplate(pattern, targetDist) {
+  const c = DIST_CFG[targetDist];
+  const progressTypes = pattern.filter(t => t !== 'recover' && t !== 'taper');
+  let pi = 0;
+  return pattern.map(type => {
+    if (type === 'recover') {
+      return { t:'recover', lsd: Math.round(c.lsdS * 0.75), int: null, tempo: 0, easy: c.easy.t };
+    }
+    if (type === 'taper') {
+      return { t:'taper',
+        lsd:  Math.round(c.lsdP * 0.55),
+        int:  c.ints[Math.min(1, c.ints.length - 1)],
+        tempo: Math.round(c.tmP * 0.60),
+        easy: c.easy.t };
+    }
+    const t = progressTypes.length > 1 ? pi / (progressTypes.length - 1) : 0.5;
+    pi++;
+    if (type === 'peak') {
+      return { t:'peak',
+        lsd:  lerpRound(c.lsdP * 0.85, c.lsdP, t),
+        int:  c.ints[Math.min(c.ints.length-1, Math.floor(c.ints.length * 0.6 + t * c.ints.length * 0.4))],
+        tempo: lerpRound(c.tmP * 0.85, c.tmP, t),
+        easy: c.easy.p };
+    }
+    return { t:'build',
+      lsd:  lerpRound(c.lsdS, c.lsdP * 0.82, t),
+      int:  c.ints[Math.min(c.ints.length-1, Math.floor(t * c.ints.length * 0.65))],
+      tempo: lerpRound(c.tmS, c.tmP * 0.82, t),
+      easy: c.easy.b };
+  });
+}
+
+// (참고용으로만 보존 — 기간 모드는 PERIOD_PATTERNS 사용)
 const TEMPLATES = {
   half: {
-    6:  [{t:'build',lsd:12,int:'400m × 6세트',tempo:20,easy:40},
-         {t:'build',lsd:14,int:'800m × 4세트',tempo:22,easy:40},
-         {t:'peak', lsd:16,int:'800m × 5세트',tempo:25,easy:40},
-         {t:'peak', lsd:18,int:'1000m × 4세트',tempo:28,easy:50},
-         {t:'taper',lsd:13,int:'400m × 4세트',tempo:20,easy:30},
-         {t:'taper',lsd:10,int:'400m × 3세트',tempo:15,easy:25}],
-    8:  [{t:'build',lsd:12,int:'400m × 6세트',tempo:20,easy:40},
-         {t:'build',lsd:14,int:'400m × 8세트',tempo:22,easy:40},
-         {t:'build',lsd:15,int:'800m × 4세트',tempo:24,easy:40},
-         {t:'build',lsd:16,int:'800m × 5세트',tempo:25,easy:40},
-         {t:'peak', lsd:17,int:'800m × 6세트',tempo:28,easy:50},
-         {t:'peak', lsd:18,int:'1000m × 5세트',tempo:30,easy:50},
-         {t:'taper',lsd:12,int:'400m × 4세트',tempo:20,easy:30}],
-    10: [{t:'build',lsd:12,int:'400m × 6세트',tempo:20,easy:40},
-         {t:'build',lsd:13,int:'400m × 8세트',tempo:22,easy:40},
-         {t:'build',lsd:14,int:'800m × 4세트',tempo:24,easy:40},
+    //  5 training + race = 6주 | taper 1주 (기간이 짧아 타협)
+    6:  [{t:'build', lsd:12,int:'400m × 5세트',tempo:20,easy:40},
+         {t:'build', lsd:15,int:'800m × 4세트',tempo:23,easy:40},
+         {t:'peak',  lsd:17,int:'800m × 5세트',tempo:26,easy:50},
+         {t:'peak',  lsd:18,int:'1000m × 4세트',tempo:28,easy:50},
+         {t:'taper', lsd:12,int:'400m × 4세트',tempo:18,easy:30}],
+    //  7 training + race = 8주 | taper 2주
+    8:  [{t:'build', lsd:12,int:'400m × 6세트',tempo:20,easy:40},
+         {t:'build', lsd:14,int:'400m × 8세트',tempo:22,easy:40},
+         {t:'build', lsd:15,int:'800m × 4세트',tempo:24,easy:40},
+         {t:'peak',  lsd:17,int:'800m × 5세트',tempo:27,easy:50},
+         {t:'peak',  lsd:18,int:'1000m × 5세트',tempo:30,easy:50},
+         {t:'taper', lsd:14,int:'400m × 4세트',tempo:20,easy:30},
+         {t:'taper', lsd:10,int:'200m × 4세트',tempo:15,easy:25}],
+    //  9 training + race = 10주 | taper 2주
+    10: [{t:'build', lsd:12,int:'400m × 6세트',tempo:20,easy:40},
+         {t:'build', lsd:13,int:'400m × 8세트',tempo:22,easy:40},
+         {t:'build', lsd:14,int:'800m × 4세트',tempo:24,easy:40},
          {t:'recover',lsd:10,int:null,tempo:0,easy:30},
-         {t:'build',lsd:15,int:'800m × 5세트',tempo:25,easy:40},
-         {t:'build',lsd:16,int:'800m × 6세트',tempo:27,easy:40},
-         {t:'peak', lsd:18,int:'1000m × 5세트',tempo:30,easy:50},
-         {t:'peak', lsd:20,int:'1000m × 6세트',tempo:30,easy:50},
-         {t:'taper',lsd:12,int:'400m × 4세트',tempo:20,easy:30}],
-    12: [{t:'build',lsd:10,int:'400m × 5세트',tempo:18,easy:40},
-         {t:'build',lsd:12,int:'400m × 6세트',tempo:20,easy:40},
-         {t:'build',lsd:13,int:'400m × 8세트',tempo:22,easy:40},
+         {t:'build', lsd:15,int:'800m × 5세트',tempo:25,easy:40},
+         {t:'peak',  lsd:17,int:'800m × 6세트',tempo:28,easy:50},
+         {t:'peak',  lsd:20,int:'1000m × 5세트',tempo:30,easy:50},
+         {t:'taper', lsd:14,int:'400m × 4세트',tempo:20,easy:30},
+         {t:'taper', lsd:10,int:'200m × 4세트',tempo:15,easy:25}],
+    // 11 training + race = 12주 | taper 2주
+    12: [{t:'build', lsd:10,int:'400m × 5세트',tempo:18,easy:40},
+         {t:'build', lsd:12,int:'400m × 6세트',tempo:20,easy:40},
+         {t:'build', lsd:13,int:'400m × 8세트',tempo:22,easy:40},
          {t:'recover',lsd:10,int:null,tempo:0,easy:30},
-         {t:'build',lsd:14,int:'800m × 4세트',tempo:24,easy:40},
-         {t:'build',lsd:15,int:'800m × 5세트',tempo:25,easy:40},
-         {t:'build',lsd:16,int:'800m × 6세트',tempo:27,easy:40},
-         {t:'peak', lsd:17,int:'1000m × 5세트',tempo:28,easy:50},
-         {t:'peak', lsd:18,int:'1000m × 5세트',tempo:30,easy:50},
-         {t:'peak', lsd:20,int:'1000m × 6세트',tempo:30,easy:50},
-         {t:'taper',lsd:12,int:'400m × 4세트',tempo:20,easy:30}],
+         {t:'build', lsd:14,int:'800m × 4세트',tempo:24,easy:40},
+         {t:'build', lsd:15,int:'800m × 5세트',tempo:25,easy:40},
+         {t:'peak',  lsd:17,int:'800m × 6세트',tempo:28,easy:50},
+         {t:'peak',  lsd:19,int:'1000m × 5세트',tempo:30,easy:50},
+         {t:'peak',  lsd:20,int:'1000m × 6세트',tempo:30,easy:50},
+         {t:'taper', lsd:14,int:'400m × 4세트',tempo:20,easy:30},
+         {t:'taper', lsd:10,int:'200m × 4세트',tempo:15,easy:25}],
   },
   '10k': {
-    4:  [{t:'build',lsd:8, int:'400m × 5세트',tempo:15,easy:30},
-         {t:'peak', lsd:10,int:'800m × 4세트',tempo:18,easy:35},
-         {t:'peak', lsd:11,int:'800m × 5세트',tempo:20,easy:35},
-         {t:'taper',lsd:7, int:'400m × 3세트',tempo:12,easy:25}],
-    6:  [{t:'build',lsd:8, int:'400m × 5세트',tempo:15,easy:30},
-         {t:'build',lsd:10,int:'400m × 7세트',tempo:18,easy:35},
-         {t:'build',lsd:11,int:'800m × 4세트',tempo:20,easy:35},
-         {t:'peak', lsd:12,int:'800m × 5세트',tempo:22,easy:40},
-         {t:'peak', lsd:13,int:'800m × 6세트',tempo:24,easy:40},
-         {t:'taper',lsd:8, int:'400m × 3세트',tempo:15,easy:30}],
-    8:  [{t:'build',lsd:8, int:'400m × 5세트',tempo:15,easy:30},
-         {t:'build',lsd:9, int:'400m × 6세트',tempo:17,easy:30},
-         {t:'build',lsd:10,int:'400m × 8세트',tempo:18,easy:35},
-         {t:'build',lsd:11,int:'800m × 4세트',tempo:20,easy:35},
-         {t:'peak', lsd:12,int:'800m × 5세트',tempo:22,easy:40},
-         {t:'peak', lsd:13,int:'800m × 6세트',tempo:24,easy:40},
-         {t:'peak', lsd:14,int:'1000m × 4세트',tempo:25,easy:40},
-         {t:'taper',lsd:8, int:'400m × 3세트',tempo:15,easy:30}],
+    //  3 training + race = 4주 | taper 1주
+    4:  [{t:'build', lsd:8, int:'400m × 5세트',tempo:15,easy:30},
+         {t:'peak',  lsd:11,int:'800m × 4세트',tempo:18,easy:35},
+         {t:'taper', lsd:7, int:'400m × 3세트',tempo:12,easy:25}],
+    //  5 training + race = 6주 | taper 1주
+    6:  [{t:'build', lsd:8, int:'400m × 5세트',tempo:15,easy:30},
+         {t:'build', lsd:10,int:'400m × 7세트',tempo:18,easy:35},
+         {t:'peak',  lsd:12,int:'800m × 4세트',tempo:21,easy:40},
+         {t:'peak',  lsd:13,int:'800m × 6세트',tempo:24,easy:40},
+         {t:'taper', lsd:8, int:'400m × 3세트',tempo:15,easy:30}],
+    //  7 training + race = 8주 | taper 2주
+    8:  [{t:'build', lsd:8, int:'400m × 5세트',tempo:15,easy:30},
+         {t:'build', lsd:9, int:'400m × 6세트',tempo:17,easy:30},
+         {t:'build', lsd:11,int:'400m × 8세트',tempo:19,easy:35},
+         {t:'peak',  lsd:12,int:'800m × 5세트',tempo:22,easy:40},
+         {t:'peak',  lsd:14,int:'1000m × 4세트',tempo:25,easy:40},
+         {t:'taper', lsd:9, int:'400m × 4세트',tempo:16,easy:30},
+         {t:'taper', lsd:7, int:'200m × 4세트',tempo:12,easy:25}],
   },
   '5k': {
-    4:  [{t:'build',lsd:6, int:'400m × 4세트',tempo:10,easy:25},
-         {t:'peak', lsd:7, int:'400m × 6세트',tempo:12,easy:25},
-         {t:'peak', lsd:8, int:'800m × 4세트',tempo:14,easy:30},
-         {t:'taper',lsd:5, int:'200m × 4세트',tempo:8, easy:20}],
-    6:  [{t:'build',lsd:6, int:'400m × 4세트',tempo:10,easy:25},
-         {t:'build',lsd:7, int:'400m × 5세트',tempo:12,easy:25},
-         {t:'build',lsd:8, int:'400m × 6세트',tempo:14,easy:30},
-         {t:'peak', lsd:8, int:'800m × 4세트',tempo:15,easy:30},
-         {t:'peak', lsd:9, int:'800m × 5세트',tempo:16,easy:30},
-         {t:'taper',lsd:5, int:'400m × 3세트',tempo:10,easy:25}],
+    //  3 training + race = 4주 | taper 1주
+    4:  [{t:'build', lsd:6, int:'400m × 4세트',tempo:10,easy:25},
+         {t:'peak',  lsd:8, int:'400m × 6세트',tempo:14,easy:30},
+         {t:'taper', lsd:5, int:'200m × 4세트',tempo:8, easy:20}],
+    //  5 training + race = 6주 | taper 1주
+    6:  [{t:'build', lsd:6, int:'400m × 4세트',tempo:10,easy:25},
+         {t:'build', lsd:7, int:'400m × 5세트',tempo:12,easy:25},
+         {t:'build', lsd:8, int:'400m × 6세트',tempo:14,easy:30},
+         {t:'peak',  lsd:9, int:'800m × 4세트',tempo:16,easy:30},
+         {t:'taper', lsd:5, int:'200m × 4세트',tempo:10,easy:20}],
   },
   full: {
-    8:  [{t:'build',lsd:16,int:'800m × 5세트',tempo:25,easy:50},
-         {t:'build',lsd:20,int:'1000m × 5세트',tempo:28,easy:50},
-         {t:'peak', lsd:24,int:'1200m × 4세트',tempo:32,easy:60},
-         {t:'peak', lsd:28,int:'1200m × 5세트',tempo:35,easy:60},
-         {t:'recover',lsd:20,int:null,tempo:0,easy:40},
-         {t:'peak', lsd:26,int:'1000m × 5세트',tempo:32,easy:60},
-         {t:'taper',lsd:18,int:'800m × 4세트',tempo:22,easy:40},
-         {t:'taper',lsd:12,int:'400m × 4세트',tempo:18,easy:30}],
-    12: [{t:'build',lsd:16,int:'800m × 5세트',tempo:25,easy:50},
-         {t:'build',lsd:18,int:'800m × 6세트',tempo:28,easy:50},
-         {t:'build',lsd:20,int:'1000m × 5세트',tempo:30,easy:50},
+    //  7 training + race = 8주 | taper 2주 (단기라 2주)
+    8:  [{t:'build', lsd:16,int:'800m × 5세트',tempo:25,easy:50},
+         {t:'build', lsd:20,int:'1000m × 5세트',tempo:28,easy:50},
+         {t:'peak',  lsd:25,int:'1200m × 4세트',tempo:32,easy:60},
+         {t:'peak',  lsd:28,int:'1200m × 5세트',tempo:35,easy:60},
+         {t:'peak',  lsd:26,int:'1000m × 5세트',tempo:32,easy:60},
+         {t:'taper', lsd:20,int:'800m × 4세트',tempo:24,easy:40},
+         {t:'taper', lsd:14,int:'400m × 4세트',tempo:18,easy:30}],
+    // 11 training + race = 12주 | taper 3주
+    12: [{t:'build', lsd:16,int:'800m × 5세트',tempo:25,easy:50},
+         {t:'build', lsd:18,int:'800m × 6세트',tempo:28,easy:50},
+         {t:'build', lsd:20,int:'1000m × 5세트',tempo:30,easy:50},
          {t:'recover',lsd:14,int:null,tempo:0,easy:40},
-         {t:'build',lsd:22,int:'1000m × 5세트',tempo:30,easy:50},
-         {t:'build',lsd:24,int:'1000m × 6세트',tempo:32,easy:60},
-         {t:'peak', lsd:26,int:'1200m × 5세트',tempo:35,easy:60},
-         {t:'peak', lsd:28,int:'1200m × 5세트',tempo:35,easy:60},
-         {t:'peak', lsd:30,int:'1000m × 6세트',tempo:35,easy:60},
-         {t:'taper',lsd:22,int:'800m × 4세트',tempo:25,easy:40},
-         {t:'taper',lsd:16,int:'400m × 4세트',tempo:20,easy:30}],
-    16: [{t:'build',lsd:12,int:'800m × 4세트',tempo:20,easy:40},
-         {t:'build',lsd:14,int:'800m × 5세트',tempo:22,easy:40},
-         {t:'build',lsd:16,int:'800m × 5세트',tempo:25,easy:50},
+         {t:'build', lsd:22,int:'1000m × 5세트',tempo:30,easy:50},
+         {t:'peak',  lsd:26,int:'1200m × 5세트',tempo:34,easy:60},
+         {t:'peak',  lsd:29,int:'1200m × 5세트',tempo:36,easy:60},
+         {t:'peak',  lsd:30,int:'1000m × 6세트',tempo:36,easy:60},
+         {t:'taper', lsd:22,int:'800m × 4세트',tempo:26,easy:50},
+         {t:'taper', lsd:16,int:'400m × 4세트',tempo:20,easy:40},
+         {t:'taper', lsd:12,int:'200m × 4세트',tempo:15,easy:30}],
+    // 15 training + race = 16주 | taper 3주
+    16: [{t:'build', lsd:12,int:'800m × 4세트',tempo:20,easy:40},
+         {t:'build', lsd:14,int:'800m × 5세트',tempo:22,easy:40},
+         {t:'build', lsd:16,int:'800m × 5세트',tempo:25,easy:50},
          {t:'recover',lsd:12,int:null,tempo:0,easy:30},
-         {t:'build',lsd:18,int:'800m × 6세트',tempo:28,easy:50},
-         {t:'build',lsd:20,int:'1000m × 5세트',tempo:30,easy:50},
-         {t:'build',lsd:22,int:'1000m × 5세트',tempo:30,easy:50},
+         {t:'build', lsd:18,int:'800m × 6세트',tempo:28,easy:50},
+         {t:'build', lsd:20,int:'1000m × 5세트',tempo:30,easy:50},
+         {t:'build', lsd:22,int:'1000m × 5세트',tempo:30,easy:50},
          {t:'recover',lsd:16,int:null,tempo:0,easy:40},
-         {t:'build',lsd:24,int:'1000m × 6세트',tempo:32,easy:60},
-         {t:'peak', lsd:26,int:'1200m × 5세트',tempo:35,easy:60},
-         {t:'peak', lsd:28,int:'1200m × 5세트',tempo:35,easy:60},
-         {t:'peak', lsd:30,int:'1000m × 6세트',tempo:35,easy:60},
-         {t:'taper',lsd:24,int:'800m × 5세트',tempo:28,easy:50},
-         {t:'taper',lsd:18,int:'800m × 4세트',tempo:22,easy:40},
-         {t:'taper',lsd:12,int:'400m × 4세트',tempo:18,easy:30}],
+         {t:'build', lsd:24,int:'1000m × 6세트',tempo:32,easy:60},
+         {t:'peak',  lsd:27,int:'1200m × 5세트',tempo:35,easy:60},
+         {t:'peak',  lsd:30,int:'1200m × 5세트',tempo:37,easy:60},
+         {t:'peak',  lsd:32,int:'1000m × 6세트',tempo:37,easy:60},
+         {t:'taper', lsd:24,int:'800m × 4세트',tempo:28,easy:50},
+         {t:'taper', lsd:16,int:'400m × 4세트',tempo:20,easy:40},
+         {t:'taper', lsd:12,int:'200m × 4세트',tempo:15,easy:30}],
   },
 };
 
-const WEEKS_OPTIONS = { half:[6,8,10,12], '10k':[4,6,8], '5k':[4,6], full:[8,12,16] };
+const WEEKS_OPTIONS = [4, 6, 8, 10, 12]; // 기간 모드: 모든 거리 동일
 const RACE_TYPE = { half:'하프마라톤', '10k':'10K 레이스', '5k':'5K 레이스', full:'풀마라톤' };
 const RACE_FRAC = { half:0.85, '10k':0.92, '5k':0.97, full:0.80 };
 const RACE_DIST = { half:21097, '10k':10000, '5k':5000, full:42195 };
 
 const DAYS_KO = ['일','월','화','수','목','금','토'];
+
+const MIN_TRAINING_WEEKS = { half: 3, '10k': 2, '5k': 2, full: 5 };
+
+// 거리별 파라미터
+const DIST_CFG = {
+  half: { lsdS:12, lsdP:20, lsdT:10, tmS:18, tmP:30, tmT:15, easy:{ b:40, p:50, t:30 },
+          ints:['400m × 5세트','400m × 8세트','800m × 5세트','800m × 6세트','1000m × 5세트'] },
+  '10k': { lsdS:8,  lsdP:14, lsdT:7,  tmS:14, tmP:25, tmT:12, easy:{ b:35, p:40, t:25 },
+           ints:['400m × 4세트','400m × 6세트','800m × 4세트','800m × 5세트','1000m × 4세트'] },
+  '5k':  { lsdS:6,  lsdP:10, lsdT:5,  tmS:10, tmP:18, tmT:8,  easy:{ b:25, p:30, t:20 },
+           ints:['200m × 4세트','400m × 4세트','400m × 6세트','800m × 4세트'] },
+  full:  { lsdS:16, lsdP:32, lsdT:12, tmS:25, tmP:40, tmT:20, easy:{ b:50, p:60, t:40 },
+           ints:['800m × 4세트','800m × 6세트','1000m × 5세트','1200m × 5세트','1000m × 6세트'] },
+};
+
+function lerpRound(a, b, t) { return Math.round(a + (b - a) * t); }
+
+// 거리별 테이퍼 주수 기준 (과학적 근거)
+const TAPER_WEEKS = { half: 2, '10k': 1, '5k': 1, full: 3 };
+
+function generateDynamicTemplate(targetDist, numWeeks) {
+  const c = DIST_CFG[targetDist];
+  const maxTaper = TAPER_WEEKS[targetDist];
+  // 전체 주수의 최대 25%, 최소 1주, 최대 maxTaper주
+  const taper  = Math.min(maxTaper, Math.max(1, Math.floor(numWeeks * 0.22)));
+  const recover = numWeeks >= 9 ? 1 : 0;
+  const remaining = numWeeks - taper - recover;
+  // 피크: 전체의 25~30%, 최소 1주, 최대 3주(단거리)/4주(풀)
+  const maxPeak = targetDist === 'full' ? 4 : 3;
+  const peak   = numWeeks <= 3 ? 0 : Math.min(maxPeak, Math.max(1, Math.floor(remaining * 0.3)));
+  const build  = Math.max(1, remaining - peak);
+
+  const weeks = [];
+
+  for (let i = 0; i < build; i++) {
+    const t = build > 1 ? i / (build - 1) : 0.5;
+    const intIdx = Math.min(Math.floor(t * c.ints.length * 0.65), c.ints.length - 1);
+    weeks.push({ t:'build',
+      lsd:  lerpRound(c.lsdS, c.lsdP * 0.82, t),
+      int:  c.ints[intIdx],
+      tempo: lerpRound(c.tmS, c.tmP * 0.82, t),
+      easy: c.easy.b });
+  }
+
+  if (recover) {
+    weeks.push({ t:'recover', lsd: Math.round(c.lsdS * 0.85), int: null, tempo: 0, easy: c.easy.t });
+  }
+
+  for (let i = 0; i < peak; i++) {
+    const t = peak > 1 ? i / (peak - 1) : 1;
+    const intIdx = Math.min(Math.floor(c.ints.length * 0.55 + t * c.ints.length * 0.45), c.ints.length - 1);
+    weeks.push({ t:'peak',
+      lsd:  lerpRound(c.lsdP * 0.82, c.lsdP, t),
+      int:  c.ints[intIdx],
+      tempo: lerpRound(c.tmP * 0.82, c.tmP, t),
+      easy: c.easy.p });
+  }
+
+  for (let i = 0; i < taper; i++) {
+    // 첫 테이퍼: 60% 볼륨, 마지막 테이퍼: 40% 볼륨
+    const t = taper > 1 ? i / (taper - 1) : 1;
+    weeks.push({ t:'taper',
+      lsd:  lerpRound(c.lsdP * 0.62, c.lsdT, t),
+      int:  c.ints[0],
+      tempo: lerpRound(c.tmT * 1.1, c.tmT * 0.75, t),
+      easy: c.easy.t });
+  }
+
+  return weeks;
+}
+
 
 // 요일별 워크아웃 (dayOfWeek: 0=일, 1=월, 2=화, 3=수, 4=목, 5=금, 6=토)
 function workoutForDay(dayOfWeek, wk, paces) {
@@ -309,6 +429,16 @@ function workoutForDay(dayOfWeek, wk, paces) {
       case 3: return ['조깅', `${wk.easy}분 / Zone 2`];
       case 4: return ['가벼운 템포', `15분 / ${tempoStr} / Zone 3`];
       case 5: return ['조깅', '30분 / Zone 1 / 회복'];
+      case 6: return ['조깅', `${wk.easy}분 / Zone 2`];
+      case 0: return ['LSD', `${wk.lsd}km / ${easyStr} / Zone 2`];
+    }
+  } else if (wk.t === 'taper') {
+    switch (dayOfWeek) {
+      case 1: return ['조깅', `${wk.easy}분 / Zone 2`];
+      case 2: return ['인터벌', `${wk.int} / ${intStr} / Zone 4 (강도 감소)`];
+      case 3: return ['조깅', `${wk.easy}분 / Zone 2`];
+      case 4: return ['템포런', `${wk.tempo}분 / ${tempoStr} / Zone 3-4`];
+      case 5: return ['조깅', '20분 / Zone 1 / 가볍게'];
       case 6: return ['조깅', `${wk.easy}분 / Zone 2`];
       case 0: return ['LSD', `${wk.lsd}km / ${easyStr} / Zone 2`];
     }
@@ -325,84 +455,125 @@ function workoutForDay(dayOfWeek, wk, paces) {
   }
 }
 
-// 대회 주차 일별 워크아웃 (daysToRace: 레이스까지 남은 일수)
+// 대회 주차: 7일 고정 최적 레이스 준비 (daysToRace: 6→0)
 function preRaceWorkout(daysToRace) {
-  if (daysToRace >= 6) return ['조깅', '40분 / Zone 2'];
-  if (daysToRace === 5) return ['조깅', '40분 / Zone 2'];
+  if (daysToRace === 6) return ['조깅', '40분 / Zone 2'];
+  if (daysToRace === 5) return ['조깅', '30분 / Zone 2 / 100m 스트라이드 × 4'];
   if (daysToRace === 4) return ['가벼운 인터벌', '200m × 4세트 / Zone 4 / 다리 살리기'];
   if (daysToRace === 3) return ['조깅', '30분 / Zone 2'];
   if (daysToRace === 2) return ['완전 휴식', '충분한 수면 / 탄수화물 로딩'];
   if (daysToRace === 1) return ['가벼운 조깅', '20분 / Zone 1 / 다리 풀기'];
-  return ['조깅', '40분 / Zone 2'];
+  return ['조깅', '30분 / Zone 2'];
 }
 
-function generatePlanData(vdot, targetDist, numWeeks, startDateStr, raceDateOverride) {
+const WEEK_TYPE_LABEL = { build:'빌드', peak:'피크', recover:'회복', taper:'테이퍼' };
+
+function generatePlanData(vdot, targetDist, numWeeks, startDateStr, raceDateOverride, useDynamic = false) {
   const p = getPaces(vdot);
   const paces = {
     easyStr:  `${fmtPace(p.easyF)}-${fmtPace(p.easyS)}/km`,
     tempoStr: `${fmtPace(p.tempoF)}-${fmtPace(p.tempoS)}/km`,
     intStr:   `${fmtPace(p.intF)}-${fmtPace(p.intS)}/km`,
   };
-  const raceTime = predictTime(vdot, RACE_DIST[targetDist], RACE_FRAC[targetDist]);
-  const raceType = RACE_TYPE[targetDist];
-
-  const template = TEMPLATES[targetDist][numWeeks];
   const startDate = new Date(startDateStr);
   const rows = [];
 
-  // ── 훈련 주차 ──
-  template.forEach((wk, wi) => {
-    const wStart = new Date(startDate);
-    wStart.setDate(wStart.getDate() + wi * 7);
+  if (!useDynamic) {
+    // ── 기간 모드: PERIOD_PATTERNS, 대회 주차 없음 ──
+    const template = patternToTemplate(PERIOD_PATTERNS[numWeeks], targetDist);
+    template.forEach((wk, wi) => {
+      const wStart = new Date(startDate);
+      wStart.setDate(wStart.getDate() + wi * 7);
+      const wEnd = new Date(wStart);
+      wEnd.setDate(wEnd.getDate() + 6);
+      const dateRange = `${wStart.getMonth()+1}/${wStart.getDate()}-${wEnd.getMonth()+1}/${wEnd.getDate()}`;
+      const weekLabel = `${wi+1}주차 · ${WEEK_TYPE_LABEL[wk.t] || '빌드'}`;
+      for (let di = 0; di < 7; di++) {
+        const date = new Date(wStart);
+        date.setDate(date.getDate() + di);
+        const dow = date.getDay();
+        const [type, detail] = workoutForDay(dow, wk, paces);
+        rows.push([wi, di, weekLabel, dateRange, DAYS_KO[dow], type, detail, 'FALSE']);
+      }
+    });
+    return rows;
+  }
+
+  // ── 대회일 모드 ──
+  const raceDate     = new Date(raceDateOverride);
+  const raceTime     = predictTime(vdot, RACE_DIST[targetDist], RACE_FRAC[targetDist]);
+  const raceType     = RACE_TYPE[targetDist];
+
+  // 대회 주차: 레이스 당일 포함 정확히 7일 (D-6 ~ D-0)
+  const raceWeekStart = new Date(raceDate);
+  raceWeekStart.setDate(raceDate.getDate() - 6);
+
+  const totalDays         = Math.floor((raceDate  - startDate)     / 86400000);
+  const trainingDays      = totalDays - 6; // 대회 주차 7일을 정확히 붙이려면 -6 (off-by-one 수정)
+  const fullTrainingWeeks = Math.floor(trainingDays / 7);
+  const partialStartDays  = trainingDays % 7;  // startDate 쪽 남는 일수
+
+  let wi = 0;
+
+  // 시작 부분 부족 일수 처리
+  if (partialStartDays > 0) {
+    const isWarmup = partialStartDays <= 3;
+    const pEnd = new Date(startDate);
+    pEnd.setDate(startDate.getDate() + partialStartDays - 1);
+    const pRange = `${startDate.getMonth()+1}/${startDate.getDate()}-${pEnd.getMonth()+1}/${pEnd.getDate()}`;
+    const pLabel = isWarmup ? '웜업 주차' : `1주차 · 빌드`;
+    const firstBuildWk = patternToTemplate(['build'], targetDist)[0];
+
+    for (let di = 0; di < partialStartDays; di++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + di);
+      const dow = date.getDay();
+      const [type, detail] = isWarmup
+        ? ['가벼운 조깅', '30분 / Zone 1-2 / 훈련 준비']
+        : workoutForDay(dow, firstBuildWk, paces);
+      rows.push([wi, di, pLabel, pRange, DAYS_KO[dow], type, detail, 'FALSE']);
+    }
+    wi++;
+  }
+
+  // 훈련 시작점 (partial days 이후)
+  const trainingStart = new Date(startDate);
+  trainingStart.setDate(startDate.getDate() + partialStartDays);
+
+  // 훈련 주차 패턴: 빌드·빌드·피크·회복 반복, 마지막 주 = 항상 테이퍼
+  const trainingPattern = Array.from({ length: fullTrainingWeeks }, (_, i) =>
+    i === fullTrainingWeeks - 1 ? 'taper' : ['build','build','peak','recover'][i % 4]
+  );
+  const trainingTemplate = patternToTemplate(trainingPattern, targetDist);
+
+  trainingTemplate.forEach((wk, idx) => {
+    const wStart = new Date(trainingStart);
+    wStart.setDate(trainingStart.getDate() + idx * 7);
     const wEnd = new Date(wStart);
     wEnd.setDate(wEnd.getDate() + 6);
     const dateRange = `${wStart.getMonth()+1}/${wStart.getDate()}-${wEnd.getMonth()+1}/${wEnd.getDate()}`;
-    const weekLabel = `${wi+1}주차`;
-
+    const weekLabel = `${wi+idx+1}주차 · ${WEEK_TYPE_LABEL[wk.t] || '빌드'}`;
     for (let di = 0; di < 7; di++) {
       const date = new Date(wStart);
       date.setDate(date.getDate() + di);
       const dow = date.getDay();
       const [type, detail] = workoutForDay(dow, wk, paces);
-      rows.push([wi, di, weekLabel, dateRange, DAYS_KO[dow], type, detail, 'FALSE']);
+      rows.push([wi + idx, di, weekLabel, dateRange, DAYS_KO[dow], type, detail, 'FALSE']);
     }
   });
+  wi += fullTrainingWeeks;
 
-  // ── 대회 주차 (훈련 주차 바로 다음부터 대회 당일까지) ──
-  const raceWi = template.length;
-  const raceWeekStart = new Date(startDate);
-  raceWeekStart.setDate(raceWeekStart.getDate() + raceWi * 7);
-
-  const raceDate = raceDateOverride ? new Date(raceDateOverride) : (() => {
-    // 기간 모드: 대회 주차 시작 후 7일째(일요일이 되도록 맞춤)를 대회일로 설정
-    const d = new Date(raceWeekStart);
-    const dow = d.getDay();
-    const daysToSun = dow === 0 ? 0 : 7 - dow;
-    d.setDate(d.getDate() + daysToSun);
-    return d;
-  })();
-
-  const raceDayMs = raceDate.getTime();
-  const raceWeekStartMs = raceWeekStart.getTime();
-  const daysInRaceWeek = Math.max(1, Math.round((raceDayMs - raceWeekStartMs) / 86400000) + 1);
-  const raceDateLabel = `${raceDate.getMonth()+1}월 ${raceDate.getDate()}일`;
-  const raceWeekEndLabel = `${raceDate.getMonth()+1}/${raceDate.getDate()}`;
-  const raceWeekStartLabel = `${raceWeekStart.getMonth()+1}/${raceWeekStart.getDate()}`;
-  const raceWeekRange = `${raceWeekStartLabel}-${raceWeekEndLabel}`;
-
-  for (let di = 0; di < daysInRaceWeek; di++) {
+  // 대회 주차: 항상 7일, 최적 레이스 준비 (D-6 → D-0)
+  const raceWeekRange = `${raceWeekStart.getMonth()+1}/${raceWeekStart.getDate()}-${raceDate.getMonth()+1}/${raceDate.getDate()}`;
+  for (let di = 0; di < 7; di++) {
     const date = new Date(raceWeekStart);
-    date.setDate(date.getDate() + di);
-    const dow = date.getDay();
-    const daysToRace = daysInRaceWeek - 1 - di;
-    let type, detail;
-    if (daysToRace === 0) {
-      type = raceType;
-      detail = `목표: ${raceTime} / Zone 3-4 / 초반 페이스 억제`;
-    } else {
-      [type, detail] = preRaceWorkout(daysToRace);
-    }
-    rows.push([raceWi, di, '대회 주차', raceWeekRange, DAYS_KO[dow], type, detail, 'FALSE']);
+    date.setDate(raceWeekStart.getDate() + di);
+    const dow  = date.getDay();
+    const daysToRace = 6 - di;
+    const [type, detail] = daysToRace === 0
+      ? [raceType, `목표: ${raceTime} / Zone 3-4 / 초반 페이스 억제`]
+      : preRaceWorkout(daysToRace);
+    rows.push([wi, di, '대회 주차', raceWeekRange, DAYS_KO[dow], type, detail, 'FALSE']);
   }
 
   return rows;
@@ -523,9 +694,8 @@ function renderList() {
 // ── Create form ───────────────────────────────────────
 
 function updateWeeksOptions() {
-  const dist = document.getElementById('targetDist').value;
   const sel = document.getElementById('numWeeks');
-  sel.innerHTML = WEEKS_OPTIONS[dist].map(w => `<option value="${w}">${w}주</option>`).join('');
+  sel.innerHTML = WEEKS_OPTIONS.map(w => `<option value="${w}">${w}주</option>`).join('');
 }
 
 function updatePreview() {
@@ -578,25 +748,23 @@ function generateNewPlan() {
       showSnackbar('대회일이 시작일보다 앞에 있어요');
       return;
     }
-    // 대회 주차(1주)를 제외한 순수 훈련 가능 주수 계산
-    const totalDays = Math.floor((raceDate - start) / 86400000);
-    const trainingWeeks = Math.max(0, Math.floor(totalDays / 7) - 1);
+    // 대회 주차는 항상 7일 (D-6~D-0) → off-by-one 없이 붙이려면 -6
+    const totalDays    = Math.floor((raceDate - start) / 86400000);
+    const trainingDays = totalDays - 6;
+    const fullTrainingWeeks = Math.floor(trainingDays / 7);
 
-    // 초과하지 않는 가장 큰 템플릿 선택
-    const available = WEEKS_OPTIONS[targetDist];
-    const fits = available.filter(w => w <= trainingWeeks);
-    if (fits.length === 0) {
-      const minNeeded = available[0] + 1; // 최소 훈련주 + 대회 주차
-      showSnackbar(`${RACE_TYPE[targetDist]} 플랜은 최소 ${minNeeded}주 필요해요`);
+    const minWeeks = MIN_TRAINING_WEEKS[targetDist];
+    if (fullTrainingWeeks < minWeeks) {
+      showSnackbar(`${RACE_TYPE[targetDist]} 플랜은 최소 ${minWeeks + 1}주 필요해요`);
       return;
     }
-    numWeeks = fits[fits.length - 1]; // 초과하지 않는 가장 큰 값
+    numWeeks = fullTrainingWeeks; // generatePlanData 내부에서 활용
     raceDateOverride = raceDateStr;
   } else {
     numWeeks = parseInt(document.getElementById('numWeeks').value);
   }
 
-  const data = generatePlanData(vdot, targetDist, numWeeks, startDate, raceDateOverride);
+  const data = generatePlanData(vdot, targetDist, numWeeks, startDate, raceDateOverride, periodMode === 'date');
   const plan = { id: Date.now(), title, createdAt: startDate, data };
   plans.push(plan);
   savePlans();
@@ -634,11 +802,11 @@ function buildWeekMap() {
 }
 
 function getBadge(label) {
-  if (label.includes('대회')) return ['race','레이스'];
-  if (label.includes('회복') || label.includes('3주차')) return ['recover','회복'];
-  if (label.includes('테이퍼') || label.includes('7주차')) return ['taper','테이퍼'];
-  if (label.includes('피크') || label.includes('6주차') || label.includes('8주차')) return ['peak','피크'];
-  return ['build','빌드업'];
+  if (label.includes('대회'))  return ['race',   '레이스'];
+  if (label.includes('회복'))  return ['recover', '회복'];
+  if (label.includes('테이퍼')) return ['taper',   '테이퍼'];
+  if (label.includes('피크'))  return ['peak',    '피크'];
+  return ['build', '빌드업'];
 }
 
 function render() {
