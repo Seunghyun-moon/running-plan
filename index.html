@@ -18,6 +18,7 @@
     <div id="vdotCard" class="vdot-user-card"></div>
     <div id="planListContainer"></div>
     <button class="btn-new" onclick="showCreate()">+ 새 플랜 만들기</button>
+    <button class="btn-reset-all" onclick="resetAllData()">초기화</button>
   </div>
 </div>
 
@@ -98,8 +99,13 @@
       <input class="title-input" id="titleInput" type="text" placeholder="플랜 이름"
              onblur="savePlanTitle()" onkeydown="if(event.key==='Enter')this.blur()" />
     </div>
-    <div class="progress-wrap"><div class="progress-fill" id="totalProgress" style="width:0%"></div></div>
   </header>
+  <div class="detail-progress-section">
+    <div class="detail-progress-bar-wrap">
+      <div class="detail-progress-fill" id="totalProgress" style="width:0%"></div>
+    </div>
+    <span class="detail-progress-pct" id="totalProgressPct">0%</span>
+  </div>
   <div class="container" id="app"></div>
 </div>
 
@@ -672,20 +678,39 @@ function _pushScreen(state) {
 let periodMode = 'weeks';
 
 function showCreate() {
+  const vdotData = loadUserVdot();
+  if (!vdotData) {
+    showSnackbar('VDOT을 먼저 입력해주세요 — 홈 화면의 "기록 입력" 버튼을 눌러주세요');
+    showVdotInput();
+    return;
+  }
+
   setScreen('screen-create');
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('startDate').value = today;
   document.getElementById('newTitle').value = '';
-  document.getElementById('raceH').value = '';
-  document.getElementById('raceM').value = '';
-  document.getElementById('raceS').value = '';
   document.getElementById('raceDate').value = '';
-  document.getElementById('vdotPreview').style.display = 'none';
-  document.getElementById('btnGenerate').disabled = true;
+
+  // 홈 VDOT 기반으로 레이스 기록 자동 입력
+  document.getElementById('raceDist').value = vdotData.dist;
+  const h = Math.floor(vdotData.time / 3600);
+  const m = Math.floor((vdotData.time % 3600) / 60);
+  const s = vdotData.time % 60;
+  document.getElementById('raceH').value = h || '';
+  document.getElementById('raceM').value = m || '';
+  document.getElementById('raceS').value = s || '';
+  updatePreview();
+
   setPeriodMode('weeks');
   updateWeeksOptions();
   window.scrollTo({ top: 0, behavior: 'instant' });
   _pushScreen({ screen: 'create' });
+}
+
+function resetAllData() {
+  if (!confirm('모든 데이터를 초기화할까요?\n\n훈련 플랜과 VDOT 기록이 모두 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.')) return;
+  localStorage.clear();
+  location.reload();
 }
 
 function setPeriodMode(mode) {
@@ -925,12 +950,7 @@ function render() {
   if (!wiKeys.length) { app.innerHTML = '<div class="loading-screen">아직 운동이 없어요</div>'; return; }
   const openWi = getTodaysWeekWi(); // 오늘이 포함된 주차, 없으면 null (전부 닫힘)
 
-  let html = `<div class="vdot-box"><div class="vdot-title">훈련 페이스 참고</div><div class="vdot-grid">
-    <div class="vdot-item">Easy <span>${getVdotNote('easy')}</span></div>
-    <div class="vdot-item">Tempo <span>${getVdotNote('tempo')}</span></div>
-    <div class="vdot-item">Interval <span>${getVdotNote('interval')}</span></div>
-    <div class="vdot-item">예상 기록 <span>${getVdotNote('race')}</span></div>
-  </div></div>`;
+  let html = ``;
 
   wiKeys.forEach(wi => {
     const w = weekMap[wi];
@@ -1106,7 +1126,10 @@ function cancelEdit(wi, di) {
 function updateTotalProgress() {
   let done=0, total=0;
   Object.values(weekMap).forEach(w=>{ done+=w.days.filter(d=>d.checked).length; total+=w.days.length; });
-  document.getElementById('totalProgress').style.width = (total?Math.round(done/total*100):0)+'%';
+  const pct = total ? Math.round(done/total*100) : 0;
+  document.getElementById('totalProgress').style.width = pct + '%';
+  const pctEl = document.getElementById('totalProgressPct');
+  if (pctEl) pctEl.textContent = pct + '%';
 }
 
 // ── User VDOT Card ─────────────────────────────────────

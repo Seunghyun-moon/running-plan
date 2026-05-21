@@ -308,18 +308,65 @@ button, input, select {
   padding-left: var(--sp-2);
 }
 
-.progress-wrap {
-  margin-top: var(--sp-2);
-  background: var(--border-soft);
-  border-radius: var(--r-full);
-  height: 4px;
-  overflow: hidden;
+.detail-progress-section {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-6);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-soft);
 }
-.progress-fill {
-  height: 4px;
+.detail-progress-bar-wrap {
+  flex: 1;
+  height: 30px;
+  background: var(--surface-soft);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  border: 1px solid var(--border-soft);
+}
+.detail-progress-fill {
+  position: relative;
+  height: 100%;
   background: var(--accent);
-  border-radius: var(--r-full);
+  border-radius: var(--r-md) 0 0 var(--r-md);
   transition: width 0.4s ease;
+  min-width: 0;
+}
+.detail-progress-fill::before,
+.detail-progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  border-radius: 42%;
+  pointer-events: none;
+}
+.detail-progress-fill::before {
+  right: -14px;
+  width: 44px;
+  height: 44px;
+  background: var(--accent);
+  animation: progressSlosh 2.6s linear infinite;
+}
+.detail-progress-fill::after {
+  right: -18px;
+  width: 52px;
+  height: 52px;
+  background: rgba(140, 140, 140, 0.55);
+  animation: progressSlosh 4s linear infinite reverse;
+}
+@keyframes progressSlosh {
+  from { transform: translateY(-50%) rotate(0deg); }
+  to   { transform: translateY(-50%) rotate(360deg); }
+}
+.detail-progress-pct {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  min-width: 46px;
+  text-align: right;
+  flex-shrink: 0;
+  letter-spacing: -0.5px;
 }
 
 /* ── Container ── */
@@ -1182,3 +1229,24 @@ button, input, select {
   transition: background 0.15s;
 }
 .vdot-modal-close:hover { background: var(--border); }
+
+/* ── Reset All Button ── */
+.btn-reset-all {
+  width: 100%;
+  height: 44px;
+  background: transparent;
+  border: 1px solid var(--border-soft);
+  color: var(--text-4);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  margin-top: var(--sp-2);
+  letter-spacing: -0.1px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.btn-reset-all:hover {
+  color: var(--text-3);
+  border-color: var(--border);
+}
