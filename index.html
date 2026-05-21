@@ -109,38 +109,53 @@ const PLANS_KEY = 'running_plans';
 const LEGACY_KEY = 'running_plan_cache';
 
 const DEFAULT_DATA = [
-  [0,0,'1주차','5/12-5/18','월','조깅','40분 / 6:30-7:30/km / 심박수 140 이하','FALSE'],
-  [0,1,'1주차','5/12-5/18','화','인터벌','400m x 8세트 / 2:00-2:05/400m / 총 5km','FALSE'],
-  [0,2,'1주차','5/12-5/18','수','조깅','40분 / Easy / 심박수 140 이하','FALSE'],
-  [0,3,'1주차','5/12-5/18','목','템포런','20분 / 5:19-5:38/km / 심박수 165-172','FALSE'],
-  [0,4,'1주차','5/12-5/18','금','조깅','30분 / 회복 조깅','FALSE'],
-  [0,5,'1주차','5/12-5/18','토','조깅','40분 / Easy / 내일 LSD 대비','FALSE'],
-  [0,6,'1주차','5/12-5/18','일','LSD','14km / 6:50-7:10/km / 심박수 140-150 / 155 넘으면 걷기','FALSE'],
-  [1,0,'2주차','5/19-5/25','월','조깅','40분 / Easy','FALSE'],
-  [1,1,'2주차','5/19-5/25','화','인터벌','400m x 10세트 / 1:55-2:05/400m / 총 6km','FALSE'],
-  [1,2,'2주차','5/19-5/25','수','조깅','40분 / Easy','FALSE'],
-  [1,3,'2주차','5/19-5/25','목','템포런','25분 / 5:19-5:30/km / 심박수 165-172','FALSE'],
-  [1,4,'2주차','5/19-5/25','금','조깅','30분 / 회복','FALSE'],
-  [1,5,'2주차','5/19-5/25','토','조깅','20분 / 대회 전날 다리 풀기','FALSE'],
-  [1,6,'2주차','5/19-5/25','일','LSD','15km / 6:40-7:00/km / 심박수 140-150','FALSE'],
-  [2,0,'5/30 대회','5월 30일','일','하프마라톤','존3-4 유지 / 초반 6:40/km 억제 / 목표 2:13-2:20','FALSE'],
-  [3,0,'3주차','6/2-6/8','월','휴식','스트레칭만','FALSE'],
-  [3,1,'3주차','6/2-6/8','화','가벼운 조깅','30분 / 심박수 130 이하','FALSE'],
-  [3,2,'3주차','6/2-6/8','수','조깅','40분 / Easy','FALSE'],
-  [3,3,'3주차','6/2-6/8','목','가벼운 템포','15분 / 5:30-5:40/km','FALSE'],
-  [3,4,'3주차','6/2-6/8','금','조깅','30분','FALSE'],
-  [3,5,'3주차','6/2-6/8','토','조깅','40분 / Easy','FALSE'],
-  [3,6,'3주차','6/2-6/8','일','완전 휴식','대회 후 회복','FALSE'],
+  [0,0,'1주차','5/12-5/18','월','Easy-이지런','40분 / 6:30-7:30/km / Zone 2','FALSE'],
+  [0,1,'1주차','5/12-5/18','화','Interval-인터벌','400m × 8세트 / 2:00-2:05/400m / Zone 5','FALSE'],
+  [0,2,'1주차','5/12-5/18','수','Easy-이지런','40분 / Zone 2','FALSE'],
+  [0,3,'1주차','5/12-5/18','목','Tempo-템포','20분 / 5:19-5:38/km / Zone 4','FALSE'],
+  [0,4,'1주차','5/12-5/18','금','Easy-이지런','30분 / Zone 1 / 회복','FALSE'],
+  [0,5,'1주차','5/12-5/18','토','Easy-이지런','40분 / Zone 2 / 내일 Long 대비','FALSE'],
+  [0,6,'1주차','5/12-5/18','일','Long-롱런','14km / 6:50-7:10/km / Zone 2','FALSE'],
+  [1,0,'2주차','5/19-5/25','월','Easy-이지런','40분 / Zone 2','FALSE'],
+  [1,1,'2주차','5/19-5/25','화','Interval-인터벌','400m × 10세트 / 1:55-2:05/400m / Zone 5','FALSE'],
+  [1,2,'2주차','5/19-5/25','수','Easy-이지런','40분 / Zone 2','FALSE'],
+  [1,3,'2주차','5/19-5/25','목','Tempo-템포','25분 / 5:19-5:30/km / Zone 4','FALSE'],
+  [1,4,'2주차','5/19-5/25','금','Easy-이지런','30분 / Zone 1 / 회복','FALSE'],
+  [1,5,'2주차','5/19-5/25','토','Easy-이지런','20분 / 대회 전날 다리 풀기','FALSE'],
+  [1,6,'2주차','5/19-5/25','일','Long-롱런','15km / 6:40-7:00/km / Zone 2','FALSE'],
+  [2,0,'5/30 대회','5월 30일','일','Race-레이스','존3-4 유지 / 초반 6:40/km 억제 / 목표 2:13-2:20','FALSE'],
+  [3,0,'3주차','6/2-6/8','월','Rest-휴식','스트레칭만','FALSE'],
+  [3,1,'3주차','6/2-6/8','화','Easy-이지런','30분 / Zone 1','FALSE'],
+  [3,2,'3주차','6/2-6/8','수','Easy-이지런','40분 / Zone 2','FALSE'],
+  [3,3,'3주차','6/2-6/8','목','Tempo-템포','15분 / 5:30-5:40/km / Zone 3','FALSE'],
+  [3,4,'3주차','6/2-6/8','금','Easy-이지런','30분 / Zone 1','FALSE'],
+  [3,5,'3주차','6/2-6/8','토','Easy-이지런','40분 / Zone 2','FALSE'],
+  [3,6,'3주차','6/2-6/8','일','Rest-휴식','대회 후 완전 회복','FALSE'],
 ];
 
 const TYPE_TAG = {
-  'LSD':'lsd','LSD 축소':'lsd',
+  // VDOT 기반 표준 타입
+  'Easy-이지런':'easy', 'Long-롱런':'long', 'Tempo-템포':'tempo',
+  'Interval-인터벌':'interval', 'Rep-레페티션':'rep',
+  'Rest-휴식':'rest', 'Race-레이스':'race',
+  // 레거시 (기존 플랜 호환)
+  'LSD':'long','LSD 축소':'long',
   '인터벌':'interval','인터벌 축소':'interval',
   '템포런':'tempo','가벼운 템포':'tempo','10km 테스트런':'tempo',
-  '조깅':'jog','가벼운 조깅':'jog',
+  '조깅':'easy','가벼운 조깅':'easy',
   '하프마라톤':'race','10K 레이스':'race','5K 레이스':'race','풀마라톤':'race',
   '완전 휴식':'rest','휴식':'rest'
 };
+
+const WORKOUT_TYPES = [
+  'Easy-이지런',
+  'Long-롱런',
+  'Tempo-템포',
+  'Interval-인터벌',
+  'Rep-레페티션',
+  'Rest-휴식',
+  'Race-레이스',
+];
 
 // ── VDOT ──────────────────────────────────────────────
 
@@ -424,46 +439,46 @@ function workoutForDay(dayOfWeek, wk, paces) {
   const { easyStr, tempoStr, intStr } = paces;
   if (wk.t === 'recover') {
     switch (dayOfWeek) {
-      case 1: return ['휴식', '스트레칭 / 폼롤러'];
-      case 2: return ['가벼운 조깅', `30분 / ${easyStr} / Zone 1`];
-      case 3: return ['조깅', `${wk.easy}분 / Zone 2`];
-      case 4: return ['가벼운 템포', `15분 / ${tempoStr} / Zone 3`];
-      case 5: return ['조깅', '30분 / Zone 1 / 회복'];
-      case 6: return ['조깅', `${wk.easy}분 / Zone 2`];
-      case 0: return ['LSD', `${wk.lsd}km / ${easyStr} / Zone 2`];
+      case 1: return ['Rest-휴식',    '스트레칭 / 폼롤러'];
+      case 2: return ['Easy-이지런',  `30분 / ${easyStr} / Zone 1`];
+      case 3: return ['Easy-이지런',  `${wk.easy}분 / Zone 2`];
+      case 4: return ['Tempo-템포',   `15분 / ${tempoStr} / Zone 3`];
+      case 5: return ['Easy-이지런',  '30분 / Zone 1 / 회복'];
+      case 6: return ['Easy-이지런',  `${wk.easy}분 / Zone 2`];
+      case 0: return ['Long-롱런',    `${wk.lsd}km / ${easyStr} / Zone 2`];
     }
   } else if (wk.t === 'taper') {
     switch (dayOfWeek) {
-      case 1: return ['조깅', `${wk.easy}분 / Zone 2`];
-      case 2: return ['인터벌', `${wk.int} / ${intStr} / Zone 4 (강도 감소)`];
-      case 3: return ['조깅', `${wk.easy}분 / Zone 2`];
-      case 4: return ['템포런', `${wk.tempo}분 / ${tempoStr} / Zone 3-4`];
-      case 5: return ['조깅', '20분 / Zone 1 / 가볍게'];
-      case 6: return ['조깅', `${wk.easy}분 / Zone 2`];
-      case 0: return ['LSD', `${wk.lsd}km / ${easyStr} / Zone 2`];
+      case 1: return ['Easy-이지런',    `${wk.easy}분 / Zone 2`];
+      case 2: return ['Interval-인터벌',`${wk.int} / ${intStr} / Zone 4 (강도 감소)`];
+      case 3: return ['Easy-이지런',    `${wk.easy}분 / Zone 2`];
+      case 4: return ['Tempo-템포',     `${wk.tempo}분 / ${tempoStr} / Zone 3-4`];
+      case 5: return ['Easy-이지런',    '20분 / Zone 1 / 가볍게'];
+      case 6: return ['Easy-이지런',    `${wk.easy}분 / Zone 2`];
+      case 0: return ['Long-롱런',      `${wk.lsd}km / ${easyStr} / Zone 2`];
     }
   } else {
     switch (dayOfWeek) {
-      case 1: return ['조깅', `${wk.easy}분 / Zone 2 / ${easyStr}`];
-      case 2: return ['인터벌', `${wk.int} / ${intStr} / Zone 5`];
-      case 3: return ['조깅', `${wk.easy}분 / Zone 2`];
-      case 4: return ['템포런', `${wk.tempo}분 / ${tempoStr} / Zone 4`];
-      case 5: return ['조깅', '30분 / Zone 1 / 회복'];
-      case 6: return ['조깅', `${wk.easy}분 / Zone 2 / 내일 LSD 대비`];
-      case 0: return ['LSD', `${wk.lsd}km / ${easyStr} / Zone 2`];
+      case 1: return ['Easy-이지런',    `${wk.easy}분 / Zone 2 / ${easyStr}`];
+      case 2: return ['Interval-인터벌',`${wk.int} / ${intStr} / Zone 5`];
+      case 3: return ['Easy-이지런',    `${wk.easy}분 / Zone 2`];
+      case 4: return ['Tempo-템포',     `${wk.tempo}분 / ${tempoStr} / Zone 4`];
+      case 5: return ['Easy-이지런',    '30분 / Zone 1 / 회복'];
+      case 6: return ['Easy-이지런',    `${wk.easy}분 / Zone 2 / 내일 Long 대비`];
+      case 0: return ['Long-롱런',      `${wk.lsd}km / ${easyStr} / Zone 2`];
     }
   }
 }
 
 // 대회 주차: 7일 고정 최적 레이스 준비 (daysToRace: 6→0)
 function preRaceWorkout(daysToRace) {
-  if (daysToRace === 6) return ['조깅', '40분 / Zone 2'];
-  if (daysToRace === 5) return ['조깅', '30분 / Zone 2 / 100m 스트라이드 × 4'];
-  if (daysToRace === 4) return ['가벼운 인터벌', '200m × 4세트 / Zone 4 / 다리 살리기'];
-  if (daysToRace === 3) return ['조깅', '30분 / Zone 2'];
-  if (daysToRace === 2) return ['완전 휴식', '충분한 수면 / 탄수화물 로딩'];
-  if (daysToRace === 1) return ['가벼운 조깅', '20분 / Zone 1 / 다리 풀기'];
-  return ['조깅', '30분 / Zone 2'];
+  if (daysToRace === 6) return ['Easy-이지런',    '40분 / Zone 2'];
+  if (daysToRace === 5) return ['Easy-이지런',    '30분 / Zone 2 / 100m 스트라이드 × 4'];
+  if (daysToRace === 4) return ['Rep-레페티션',   '200m × 4세트 / Zone 4 / 다리 살리기'];
+  if (daysToRace === 3) return ['Easy-이지런',    '30분 / Zone 2'];
+  if (daysToRace === 2) return ['Rest-휴식',      '충분한 수면 / 탄수화물 로딩'];
+  if (daysToRace === 1) return ['Easy-이지런',    '20분 / Zone 1 / 다리 풀기'];
+  return ['Easy-이지런', '30분 / Zone 2'];
 }
 
 const WEEK_TYPE_LABEL = { build:'빌드', peak:'피크', recover:'회복', taper:'테이퍼' };
@@ -665,6 +680,37 @@ function setScreen(id) {
 
 // ── List render ───────────────────────────────────────
 
+function parsePlanDateRange(str) {
+  const s = String(str).trim();
+  const y = new Date().getFullYear();
+  if (s.includes('-') && s.includes('/')) {
+    const [a, b] = s.split('-');
+    const [sm, sd] = a.split('/').map(Number);
+    const [em, ed] = b.split('/').map(Number);
+    return [new Date(y, sm-1, sd), new Date(y, em-1, ed)];
+  }
+  if (s.includes('월')) {
+    const m = parseInt(s), d = parseInt(s.split('월')[1]);
+    const dt = new Date(y, m-1, d);
+    return [dt, dt];
+  }
+  return [null, null];
+}
+
+function getTodaysWorkout(planData) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const DAYS = ['일','월','화','수','목','금','토'];
+  const todayDay = DAYS[today.getDay()];
+  for (const row of planData) {
+    if (row[4] !== todayDay) continue;
+    const [s, e] = parsePlanDateRange(row[3]);
+    if (!s || !e) continue;
+    s.setHours(0,0,0,0); e.setHours(0,0,0,0);
+    if (s <= today && today <= e) return { type: row[5], detail: row[6], checked: row[7] === 'TRUE' };
+  }
+  return null;
+}
+
 function renderList() {
   const el = document.getElementById('planListContainer');
   if (!plans.length) {
@@ -680,10 +726,18 @@ function renderList() {
     const first = dateRows.length ? String(dateRows[0][3]).split('-')[0] : '';
     const last = dateRows.length ? String(dateRows[dateRows.length-1][3]).split('-')[1] : '';
     const meta = total ? `${first && last ? first+' – '+last+' · ' : ''}${weekCount}주 · ${done}/${total} 완료` : '운동 없음';
+    const tw = getTodaysWorkout(plan.data);
+    const todayHTML = tw ? `
+      <div class="plan-card-today${tw.checked ? ' done' : ''}">
+        <span class="plan-card-today-label">오늘</span>
+        <span class="tag tag-${TYPE_TAG[tw.type]||'easy'}">${tw.type}</span>
+        <span class="plan-card-today-detail">${tw.detail}</span>
+      </div>` : '';
     return `<div class="plan-card" onclick="showDetail(${plan.id})">
       <div class="plan-card-body">
         <div class="plan-card-title">${plan.title}</div>
         <div class="plan-card-meta">${meta}</div>
+        ${todayHTML}
         <div class="plan-card-bar-wrap"><div class="plan-card-bar" style="width:${pct}%"></div></div>
       </div>
       <span class="plan-card-chev">›</span>
@@ -809,10 +863,22 @@ function getBadge(label) {
   return ['build', '빌드업'];
 }
 
+function getTodaysWeekWi() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  for (const row of allData) {
+    const [s, e] = parsePlanDateRange(row[3]);
+    if (!s || !e) continue;
+    s.setHours(0,0,0,0); e.setHours(0,0,0,0);
+    if (s <= today && today <= e) return String(row[0]);
+  }
+  return null;
+}
+
 function render() {
   const app = document.getElementById('app');
   const wiKeys = Object.keys(weekMap).sort((a,b)=>a-b);
   if (!wiKeys.length) { app.innerHTML = '<div class="loading-screen">아직 운동이 없어요</div>'; return; }
+  const openWi = getTodaysWeekWi(); // 오늘이 포함된 주차, 없으면 null (전부 닫힘)
 
   let html = `<div class="vdot-box"><div class="vdot-title">훈련 페이스 참고</div><div class="vdot-grid">
     <div class="vdot-item">Easy <span>${getVdotNote('easy')}</span></div>
@@ -825,7 +891,7 @@ function render() {
     const w = weekMap[wi];
     const done = w.days.filter(d=>d.checked).length;
     const [badgeClass, badgeText] = getBadge(w.label);
-    const isOpen = wi == wiKeys[0] ? 'open' : '';
+    const isOpen = openWi !== null && wi == openWi ? 'open' : '';
     html += `<div class="week-block">
       <div class="week-header" onclick="toggleWeek(${wi})">
         <div style="flex:1"><div class="week-title">${w.label} <span class="week-date">${w.date}</span></div></div>
@@ -843,6 +909,12 @@ function render() {
               <div class="day-type"><span class="tag tag-${tag}">${d.type}</span></div>
               <div class="day-detail">${d.detail}</div>
             </div>
+            <button class="edit-btn" onclick="startEdit(${wi},${d.di})" title="수정">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
           </div>`;
         }).join('')}
       </div>
@@ -891,6 +963,99 @@ function toggleCheck(wi, di) {
 function saveCurrentPlan() {
   const plan = plans.find(p=>p.id===currentPlanId);
   if (plan) { plan.data = allData; savePlans(); }
+}
+
+// ── Day Row Edit ──────────────────────────────────────
+
+function _dayRowViewHTML(wi, di) {
+  const entry = weekMap[wi]?.days.find(d => d.di == di);
+  if (!entry) return '';
+  const tag = TYPE_TAG[entry.type] || 'jog';
+  return `
+    <div class="checkbox ${entry.checked ? 'checked' : ''}" id="cb-${wi}-${di}" onclick="toggleCheck(${wi},${di})"></div>
+    <div class="day-label">${entry.day}</div>
+    <div class="day-content">
+      <div class="day-type"><span class="tag tag-${tag}">${entry.type}</span></div>
+      <div class="day-detail">${entry.detail}</div>
+    </div>
+    <button class="edit-btn" onclick="startEdit(${wi},${di})" title="수정">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>
+    </button>`;
+}
+
+// 같은 타입의 기존 워크아웃에서 detail 추출, 없으면 기본값
+function suggestDetail(newType, excludeWi, excludeDi) {
+  const match = allData.find(r => r[5] === newType && !(r[0] == excludeWi && r[1] == excludeDi));
+  if (match) return match[6];
+
+  const defaults = {
+    'Easy-이지런':     '40분 / Zone 2',
+    'Long-롱런':       '15km / Zone 2',
+    'Tempo-템포':      '20분 / Zone 4',
+    'Interval-인터벌': '400m × 6세트 / Zone 5',
+    'Rep-레페티션':    '200m × 4세트 / Zone 5+',
+    'Rest-휴식':       '스트레칭 / 폼롤러',
+    'Race-레이스':     'Zone 3-4 / 페이스 조절 집중',
+  };
+  return defaults[newType] || '';
+}
+
+function onEditTypeChange(wi, di) {
+  const newType = document.getElementById(`edit-type-${wi}-${di}`)?.value;
+  if (!newType) return;
+  const input = document.getElementById(`edit-detail-${wi}-${di}`);
+  if (input) {
+    input.value = suggestDetail(newType, wi, di);
+    input.select();
+  }
+}
+
+function startEdit(wi, di) {
+  const row = document.getElementById(`row-${wi}-${di}`);
+  const entry = weekMap[wi]?.days.find(d => d.di == di);
+  if (!row || !entry) return;
+
+  row.classList.add('editing');
+  row.innerHTML = `
+    <div class="checkbox ${entry.checked ? 'checked' : ''}" id="cb-${wi}-${di}" onclick="toggleCheck(${wi},${di})"></div>
+    <div class="day-label">${entry.day}</div>
+    <div class="edit-form">
+      <select class="edit-type-select" id="edit-type-${wi}-${di}" onchange="onEditTypeChange(${wi},${di})">
+        ${WORKOUT_TYPES.map(t => `<option value="${t}"${t === entry.type ? ' selected' : ''}>${t}</option>`).join('')}
+      </select>
+      <input class="edit-detail-input" id="edit-detail-${wi}-${di}" type="text" value="${entry.detail}" placeholder="운동 내용" />
+      <div class="edit-actions">
+        <button class="edit-cancel" onclick="cancelEdit(${wi},${di})">취소</button>
+        <button class="edit-save" onclick="saveEdit(${wi},${di})">저장</button>
+      </div>
+    </div>`;
+
+  setTimeout(() => document.getElementById(`edit-detail-${wi}-${di}`)?.select(), 50);
+}
+
+function saveEdit(wi, di) {
+  const newType   = document.getElementById(`edit-type-${wi}-${di}`)?.value;
+  const newDetail = document.getElementById(`edit-detail-${wi}-${di}`)?.value.trim();
+  if (!newType) return;
+
+  const entry = weekMap[wi]?.days.find(d => d.di == di);
+  if (entry) { entry.type = newType; entry.detail = newDetail; }
+
+  const dataRow = allData.find(r => r[0] == wi && r[1] == di);
+  if (dataRow) { dataRow[5] = newType; dataRow[6] = newDetail; }
+
+  saveCurrentPlan();
+
+  const row = document.getElementById(`row-${wi}-${di}`);
+  if (row) { row.classList.remove('editing'); row.innerHTML = _dayRowViewHTML(wi, di); }
+}
+
+function cancelEdit(wi, di) {
+  const row = document.getElementById(`row-${wi}-${di}`);
+  if (row) { row.classList.remove('editing'); row.innerHTML = _dayRowViewHTML(wi, di); }
 }
 
 function updateTotalProgress() {
