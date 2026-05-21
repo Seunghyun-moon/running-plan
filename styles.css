@@ -913,3 +913,272 @@ button, input, select {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+/* =====================================
+   VDOT USER CARD (Home)
+   ===================================== */
+.vdot-user-card {
+  margin-bottom: var(--sp-4);
+}
+
+.vdot-user-empty {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--sp-5);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+.vdot-user-empty-text {
+  flex: 1;
+  min-width: 0;
+}
+.vdot-user-empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 3px;
+  letter-spacing: -0.1px;
+}
+.vdot-user-empty-sub {
+  font-size: 12px;
+  color: var(--text-3);
+  line-height: 1.5;
+}
+.vdot-user-btn {
+  height: 34px;
+  padding: 0 var(--sp-4);
+  background: var(--accent);
+  color: var(--surface);
+  border: none;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  letter-spacing: -0.1px;
+  transition: opacity 0.15s;
+}
+.vdot-user-btn:active { opacity: 0.8; }
+
+.vdot-user-filled {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--sp-5);
+  padding-bottom: 0;
+  overflow: hidden;
+}
+.vdot-user-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--sp-4);
+}
+.vdot-user-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  margin-bottom: var(--sp-1);
+}
+.vdot-user-edit-btn {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: color 0.15s, background 0.15s;
+}
+.vdot-user-edit-btn:hover {
+  color: var(--text);
+  background: var(--surface-soft);
+}
+.vdot-user-score {
+  font-size: 44px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -1.5px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 4px;
+}
+.vdot-user-source {
+  font-size: 12px;
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+/* ── Tabs ── */
+.vdot-tabs {
+  display: flex;
+  border-top: 1px solid var(--border-soft);
+  margin: 0 calc(-1 * var(--sp-5));
+  margin-top: var(--sp-4);
+}
+.vdot-tab {
+  flex: 1;
+  height: 42px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  letter-spacing: -0.1px;
+}
+.vdot-tab.active {
+  color: var(--text);
+  font-weight: 600;
+  border-bottom-color: var(--text);
+}
+
+/* ── Tab content ── */
+.vdot-tab-content {
+  padding: var(--sp-1) 0 var(--sp-4);
+}
+
+/* ── Race predictions ── */
+.vdot-races-header {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0 var(--sp-4);
+  padding: var(--sp-2) 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-soft);
+}
+.vdot-races-header span:nth-child(2),
+.vdot-races-header span:nth-child(3) { text-align: right; }
+
+.vdot-race-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0 var(--sp-4);
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--border-soft);
+  align-items: center;
+}
+.vdot-race-row:last-child { border-bottom: none; }
+.vdot-race-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+.vdot-race-time {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  min-width: 60px;
+}
+.vdot-race-pace {
+  font-size: 12px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  min-width: 52px;
+}
+
+/* ── Training paces ── */
+.vdot-pace-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.vdot-pace-row:last-child { border-bottom: none; }
+.vdot-pace-code {
+  width: 18px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  flex-shrink: 0;
+  letter-spacing: -0.3px;
+}
+.vdot-pace-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+.vdot-pace-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.2px;
+}
+
+/* =====================================
+   VDOT INPUT MODAL
+   ===================================== */
+.vdot-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 200;
+  align-items: flex-end;
+  justify-content: center;
+}
+.vdot-modal-overlay.open {
+  display: flex;
+}
+.vdot-modal-sheet {
+  background: var(--bg);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 480px;
+  padding: var(--sp-6);
+  padding-bottom: calc(var(--sp-6) + env(safe-area-inset-bottom, 0px));
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: vdotSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes vdotSlideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.vdot-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-6);
+}
+.vdot-modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+.vdot-modal-close {
+  background: var(--surface-soft);
+  border: none;
+  color: var(--text-2);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.vdot-modal-close:hover { background: var(--border); }

@@ -15,6 +15,7 @@
 <div id="screen-list" class="screen">
   <header class="list-header"><h1>🏃 러닝 플랜</h1></header>
   <div class="container">
+    <div id="vdotCard" class="vdot-user-card"></div>
     <div id="planListContainer"></div>
     <button class="btn-new" onclick="showCreate()">+ 새 플랜 만들기</button>
   </div>
@@ -100,6 +101,48 @@
     <div class="progress-wrap"><div class="progress-fill" id="totalProgress" style="width:0%"></div></div>
   </header>
   <div class="container" id="app"></div>
+</div>
+
+<!-- ── VDOT Input Modal ── -->
+<div id="vdotModal" class="vdot-modal-overlay" onclick="onVdotModalOverlayClick(event)">
+  <div class="vdot-modal-sheet">
+    <div class="vdot-modal-header">
+      <span class="vdot-modal-title">레이스 기록 입력</span>
+      <button class="vdot-modal-close" onclick="hideVdotInput()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="form-section">
+      <label class="form-label">레이스 거리</label>
+      <select class="form-select" id="vi-dist" onchange="onVdotModalChange()">
+        <option value="5000">5K</option>
+        <option value="10000">10K</option>
+        <option value="21097" selected>하프마라톤</option>
+        <option value="42195">풀마라톤</option>
+      </select>
+    </div>
+    <div class="form-section">
+      <label class="form-label">완주 기록</label>
+      <div class="time-wrap">
+        <input class="form-input time-input" id="vi-h" type="number" min="0" max="9" placeholder="시" oninput="onVdotModalChange()" />
+        <span class="time-sep">:</span>
+        <input class="form-input time-input" id="vi-m" type="number" min="0" max="59" placeholder="분" oninput="onVdotModalChange()" />
+        <span class="time-sep">:</span>
+        <input class="form-input time-input" id="vi-s" type="number" min="0" max="59" placeholder="초" oninput="onVdotModalChange()" />
+      </div>
+    </div>
+    <div id="vi-preview" class="vdot-preview" style="display:none">
+      <div class="vdot-score">VDOT <strong id="vi-vdot-val">-</strong></div>
+      <div class="vdot-paces">
+        <div class="vdot-pace-item">Easy<span id="vi-easy">-</span></div>
+        <div class="vdot-pace-item">Tempo<span id="vi-tempo">-</span></div>
+        <div class="vdot-pace-item">Interval<span id="vi-interval">-</span></div>
+      </div>
+    </div>
+    <button class="btn-generate" id="vi-save-btn" onclick="saveVdotInput()" disabled>저장하기</button>
+  </div>
 </div>
 
 <div class="snackbar" id="snackbar"></div>
@@ -617,6 +660,7 @@ function migrate() {
 function showList() {
   currentPlanId = null;
   setScreen('screen-list');
+  renderVdotCard();
   renderList();
 }
 
@@ -1062,6 +1106,183 @@ function updateTotalProgress() {
   let done=0, total=0;
   Object.values(weekMap).forEach(w=>{ done+=w.days.filter(d=>d.checked).length; total+=w.days.length; });
   document.getElementById('totalProgress').style.width = (total?Math.round(done/total*100):0)+'%';
+}
+
+// ── User VDOT Card ─────────────────────────────────────
+const USER_VDOT_KEY = 'user_vdot';
+
+function loadUserVdot() {
+  try { return JSON.parse(localStorage.getItem(USER_VDOT_KEY)); } catch(e) { return null; }
+}
+
+function saveUserVdotData(data) {
+  localStorage.setItem(USER_VDOT_KEY, JSON.stringify(data));
+}
+
+function renderVdotCard() {
+  const card = document.getElementById('vdotCard');
+  if (!card) return;
+  const data = loadUserVdot();
+  if (!data) {
+    card.innerHTML = `
+      <div class="vdot-user-empty">
+        <div class="vdot-user-empty-text">
+          <div class="vdot-user-empty-title">나의 VDOT</div>
+          <div class="vdot-user-empty-sub">레이스 기록으로 나만의 훈련 페이스를 계산하세요</div>
+        </div>
+        <button class="vdot-user-btn" onclick="showVdotInput()">기록 입력</button>
+      </div>`;
+  } else {
+    const distLabel = { 5000:'5K', 10000:'10K', 21097:'하프마라톤', 42195:'풀마라톤' }[data.dist] || '레이스';
+
+    const raceDists = [
+      { label:'마라톤',     dist:42195 },
+      { label:'30K',        dist:30000 },
+      { label:'하프마라톤', dist:21097 },
+      { label:'15K',        dist:15000 },
+      { label:'10K',        dist:10000 },
+      { label:'5K',         dist:5000  },
+      { label:'3K',         dist:3000  },
+    ];
+    const racesHTML = raceDists.map(r => {
+      const sec = predictRaceTimeSec(data.vdot, r.dist);
+      const pace = sec / (r.dist / 1000);
+      return `<div class="vdot-race-row">
+        <span class="vdot-race-label">${r.label}</span>
+        <span class="vdot-race-time">${fmtTime(sec)}</span>
+        <span class="vdot-race-pace">${fmtPace(pace)}/km</span>
+      </div>`;
+    }).join('');
+
+    const trainingZones = [
+      { code:'E', label:'이지런(조깅)', paceStr: `${fmtPace(paceSecFromFraction(data.vdot,0.74))} ~ ${fmtPace(paceSecFromFraction(data.vdot,0.59))}/km` },
+      { code:'M', label:'마라톤',       paceStr: `${fmtPace(paceSecFromFraction(data.vdot,0.79))}/km` },
+      { code:'T', label:'젖산역치(LT)', paceStr: `${fmtPace(paceSecFromFraction(data.vdot,0.83))}/km` },
+      { code:'I', label:'인터벌',       paceStr: `${fmtPace(paceSecFromFraction(data.vdot,0.98))}/km` },
+      { code:'R', label:'반복',         paceStr: `${fmtPace(paceSecFromFraction(data.vdot,1.05))}/km` },
+    ];
+    const pacesHTML = trainingZones.map(z => `
+      <div class="vdot-pace-row">
+        <span class="vdot-pace-code">${z.code}</span>
+        <span class="vdot-pace-name">${z.label}</span>
+        <span class="vdot-pace-value">${z.paceStr}</span>
+      </div>`).join('');
+
+    card.innerHTML = `
+      <div class="vdot-user-filled">
+        <div class="vdot-user-header">
+          <div>
+            <span class="vdot-user-label">나의 VDOT</span>
+            <div class="vdot-user-score">${data.vdot}</div>
+            <div class="vdot-user-source">${distLabel} ${fmtTime(data.time)} 기준</div>
+          </div>
+          <button class="vdot-user-edit-btn" onclick="showVdotInput()" title="수정">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="vdot-tabs">
+          <button class="vdot-tab active" id="vtab-race" onclick="switchVdotTab('race')">예상 기록</button>
+          <button class="vdot-tab" id="vtab-pace" onclick="switchVdotTab('pace')">훈련 페이스</button>
+        </div>
+        <div id="vtab-content-race" class="vdot-tab-content">
+          <div class="vdot-races-header">
+            <span>거리</span><span>예상 기록</span><span>페이스</span>
+          </div>
+          ${racesHTML}
+        </div>
+        <div id="vtab-content-pace" class="vdot-tab-content" style="display:none">
+          ${pacesHTML}
+        </div>
+      </div>`;
+  }
+}
+
+function predictRaceTimeSec(vdot, distM) {
+  let lo = distM * 0.05, hi = distM * 3;
+  for (let i = 0; i < 60; i++) {
+    const mid = (lo + hi) / 2;
+    if (calcVDOT(distM, mid) > vdot) lo = mid;
+    else hi = mid;
+  }
+  return Math.round((lo + hi) / 2);
+}
+
+function switchVdotTab(tab) {
+  ['race', 'pace'].forEach(t => {
+    document.getElementById(`vtab-${t}`)?.classList.toggle('active', t === tab);
+    const c = document.getElementById(`vtab-content-${t}`);
+    if (c) c.style.display = t === tab ? 'block' : 'none';
+  });
+}
+
+function showVdotInput() {
+  const data = loadUserVdot();
+  if (data) {
+    document.getElementById('vi-dist').value = data.dist;
+    const h = Math.floor(data.time / 3600);
+    const m = Math.floor((data.time % 3600) / 60);
+    const s = data.time % 60;
+    document.getElementById('vi-h').value = h || '';
+    document.getElementById('vi-m').value = m || '';
+    document.getElementById('vi-s').value = s || '';
+    onVdotModalChange();
+  } else {
+    document.getElementById('vi-dist').value = '21097';
+    document.getElementById('vi-h').value = '';
+    document.getElementById('vi-m').value = '';
+    document.getElementById('vi-s').value = '';
+    document.getElementById('vi-preview').style.display = 'none';
+    document.getElementById('vi-save-btn').disabled = true;
+  }
+  document.getElementById('vdotModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function hideVdotInput() {
+  document.getElementById('vdotModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function onVdotModalOverlayClick(e) {
+  if (e.target === document.getElementById('vdotModal')) hideVdotInput();
+}
+
+function onVdotModalChange() {
+  const dist = parseInt(document.getElementById('vi-dist').value);
+  const h = parseInt(document.getElementById('vi-h').value) || 0;
+  const m = parseInt(document.getElementById('vi-m').value) || 0;
+  const s = parseInt(document.getElementById('vi-s').value) || 0;
+  const totalSec = h*3600 + m*60 + s;
+  const preview = document.getElementById('vi-preview');
+  const saveBtn = document.getElementById('vi-save-btn');
+  if (!totalSec || totalSec < 60) { preview.style.display = 'none'; saveBtn.disabled = true; return; }
+  const vdot = calcVDOT(dist, totalSec);
+  if (vdot < 20 || vdot > 85) { preview.style.display = 'none'; saveBtn.disabled = true; return; }
+  const p = getPaces(vdot);
+  document.getElementById('vi-vdot-val').textContent = vdot;
+  document.getElementById('vi-easy').textContent = `${fmtPace(p.easyF)}-${fmtPace(p.easyS)}/km`;
+  document.getElementById('vi-tempo').textContent = `${fmtPace(p.tempoF)}-${fmtPace(p.tempoS)}/km`;
+  document.getElementById('vi-interval').textContent = `${fmtPace(p.intF)}-${fmtPace(p.intS)}/km`;
+  preview.style.display = 'block';
+  saveBtn.disabled = false;
+}
+
+function saveVdotInput() {
+  const dist = parseInt(document.getElementById('vi-dist').value);
+  const h = parseInt(document.getElementById('vi-h').value) || 0;
+  const m = parseInt(document.getElementById('vi-m').value) || 0;
+  const s = parseInt(document.getElementById('vi-s').value) || 0;
+  const totalSec = h*3600 + m*60 + s;
+  if (!totalSec || totalSec < 60) return;
+  const vdot = calcVDOT(dist, totalSec);
+  if (vdot < 20 || vdot > 85) return;
+  saveUserVdotData({ vdot, dist, time: totalSec });
+  hideVdotInput();
+  renderVdotCard();
+  showSnackbar('VDOT가 저장되었어요');
 }
 
 // ── Init ──────────────────────────────────────────────
