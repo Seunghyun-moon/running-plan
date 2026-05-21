@@ -648,9 +648,10 @@ function savePlans() { localStorage.setItem(PLANS_KEY, JSON.stringify(plans)); }
 
 function migrate() {
   if (localStorage.getItem(PLANS_KEY)) return;
+  const legacy = localStorage.getItem(LEGACY_KEY);
+  if (!legacy) return; // 신규 사용자는 빈 상태로 시작
   let data;
-  try { const l = localStorage.getItem(LEGACY_KEY); data = l ? JSON.parse(l) : DEFAULT_DATA.map(r=>[...r]); }
-  catch(e) { data = DEFAULT_DATA.map(r=>[...r]); }
+  try { data = JSON.parse(legacy); } catch(e) { return; }
   plans = [{ id: Date.now(), title: '2026 봄 하프마라톤', createdAt: '2026-05-12', data }];
   savePlans();
 }
@@ -1139,10 +1140,8 @@ function renderVdotCard() {
       { label:'마라톤',     dist:42195 },
       { label:'30K',        dist:30000 },
       { label:'하프마라톤', dist:21097 },
-      { label:'15K',        dist:15000 },
       { label:'10K',        dist:10000 },
       { label:'5K',         dist:5000  },
-      { label:'3K',         dist:3000  },
     ];
     const racesHTML = raceDists.map(r => {
       const sec = predictRaceTimeSec(data.vdot, r.dist);
