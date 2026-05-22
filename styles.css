@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Grandiflora+One&family=Sarina&display=swap');
 
 /* ── Design Tokens ── */
 :root {
@@ -78,10 +79,11 @@ button, input, select {
   padding: var(--sp-10) var(--sp-6) var(--sp-4);
 }
 .list-header h1 {
+  font-family: 'Sarina', cursive;
   font-size: 40px;
-  font-weight: 900;
+  font-weight: 400;
   color: var(--text);
-  letter-spacing: -1.5px;
+  letter-spacing: 0;
   line-height: 1.05;
 }
 
@@ -746,22 +748,20 @@ button, input, select {
   box-shadow: 0 0 0 3px rgba(17,17,17,0.07);
 }
 
-/* iOS Safari date input fix */
+/* iOS Safari date input — keep native appearance so calendar icon shows */
 .form-input[type="date"] {
-  -webkit-appearance: none;
-  appearance: none;
-  display: block;
+  -webkit-appearance: auto;
+  appearance: auto;
   min-height: 56px;
   font-family: inherit;
-  text-align: left;
-}
-.form-input[type="date"]::-webkit-date-and-time-value {
-  text-align: left;
-  width: 100%;
+  line-height: 54px;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 .form-input[type="date"]::-webkit-calendar-picker-indicator {
-  margin-left: auto;
-  opacity: 0.5;
+  cursor: pointer;
+  opacity: 0.7;
+  flex-shrink: 0;
 }
 
 .form-select {
@@ -1215,8 +1215,8 @@ button, input, select {
   width: 100%;
   height: 44px;
   background: transparent;
-  border: 1.5px solid var(--border-soft);
-  color: var(--text-4);
+  border: none;
+  color: var(--text-3);
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
@@ -1224,9 +1224,65 @@ button, input, select {
   cursor: pointer;
   margin-top: var(--sp-2);
   letter-spacing: -0.1px;
-  transition: color 0.2s, border-color 0.2s;
+  transition: color 0.2s;
 }
 .btn-reset-all:hover {
-  color: var(--text-3);
-  border-color: var(--border);
+  color: var(--text-2);
 }
+
+/* ── Confirm Sheet ── */
+.confirm-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 200;
+  align-items: flex-end;
+  justify-content: center;
+}
+.confirm-overlay.active {
+  display: flex;
+}
+.confirm-sheet {
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  padding: var(--sp-6) var(--sp-6) calc(var(--sp-6) + env(safe-area-inset-bottom));
+  animation: slideUp 0.22s ease;
+}
+.confirm-msg {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.6;
+  white-space: pre-line;
+  margin-bottom: var(--sp-6);
+  text-align: center;
+}
+.confirm-actions {
+  display: flex;
+  gap: var(--sp-3);
+}
+.confirm-btn-cancel,
+.confirm-btn-ok {
+  flex: 1;
+  height: 52px;
+  border: none;
+  border-radius: var(--r-full);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.confirm-btn-cancel {
+  background: var(--surface-soft);
+  color: var(--text-2);
+}
+.confirm-btn-ok {
+  background: var(--text);
+  color: #fff;
+}
+.confirm-btn-cancel:active,
+.confirm-btn-ok:active { opacity: 0.75; }

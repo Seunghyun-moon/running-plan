@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="러닝 플랜">
-<title>러닝 플랜</title>
+<meta name="apple-mobile-web-app-title" content="HolyRun">
+<title>HolyRun</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <!-- ── Plan List ── -->
 <div id="screen-list" class="screen">
-  <header class="list-header"><h1>러닝<br>플랜</h1></header>
+  <header class="list-header"><h1>HolyRun</h1></header>
   <div class="container">
     <div id="vdotCard" class="vdot-user-card"></div>
     <div id="planListContainer"></div>
@@ -152,6 +152,17 @@
 </div>
 
 <div class="snackbar" id="snackbar"></div>
+
+<!-- ── Confirm Sheet ── -->
+<div class="confirm-overlay" id="confirmOverlay" onclick="confirmCancel()">
+  <div class="confirm-sheet" onclick="event.stopPropagation()">
+    <p class="confirm-msg" id="confirmMsg"></p>
+    <div class="confirm-actions">
+      <button class="confirm-btn-cancel" onclick="confirmCancel()">취소</button>
+      <button class="confirm-btn-ok" id="confirmOkBtn">확인</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const PLANS_KEY = 'running_plans';
@@ -707,10 +718,22 @@ function showCreate() {
   _pushScreen({ screen: 'create' });
 }
 
+function showConfirm(msg, onOk) {
+  document.getElementById('confirmMsg').textContent = msg;
+  const overlay = document.getElementById('confirmOverlay');
+  overlay.classList.add('active');
+  const okBtn = document.getElementById('confirmOkBtn');
+  okBtn.onclick = () => { confirmCancel(); onOk(); };
+}
+function confirmCancel() {
+  document.getElementById('confirmOverlay').classList.remove('active');
+}
+
 function resetAllData() {
-  if (!confirm('모든 데이터를 초기화할까요?\n\n훈련 플랜과 VDOT 기록이 모두 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.')) return;
-  localStorage.clear();
-  location.reload();
+  showConfirm('모든 데이터를 초기화할까요?\n훈련 플랜과 VDOT 기록이 모두 삭제됩니다.', () => {
+    localStorage.clear();
+    location.reload();
+  });
 }
 
 function setPeriodMode(mode) {
@@ -908,10 +931,12 @@ function savePlanTitle() {
 }
 
 function deletePlan() {
-  if (!confirm('이 플랜을 삭제하시겠어요? 되돌릴 수 없습니다.')) return;
-  plans = plans.filter(p => p.id !== currentPlanId);
-  savePlans();
-  showList();
+  if (!currentPlanId) return;
+  showConfirm('이 플랜을 삭제하시겠어요?\n되돌릴 수 없습니다.', () => {
+    plans = plans.filter(p => p.id !== currentPlanId);
+    savePlans();
+    showList();
+  });
 }
 
 // ── Detail render ─────────────────────────────────────
