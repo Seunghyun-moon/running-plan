@@ -36,39 +36,48 @@
       <input class="form-input" id="newTitle" type="text" placeholder="예: 2026 가을 하프마라톤" />
     </div>
     <div class="form-section">
-      <label class="form-label">최근 레이스 기록</label>
-      <div class="form-row" style="margin-bottom:8px">
-        <select class="form-select" id="raceDist" onchange="updatePreview()">
-          <option value="5000">5K</option>
-          <option value="10000">10K</option>
-          <option value="21097" selected>하프마라톤</option>
-          <option value="42195">풀마라톤</option>
-        </select>
-      </div>
-      <div class="time-wrap">
-        <input class="form-input time-input" id="raceH" type="number" min="0" max="9" placeholder="시" oninput="updatePreview()" />
-        <span class="time-sep">:</span>
-        <input class="form-input time-input" id="raceM" type="number" min="0" max="59" placeholder="분" oninput="updatePreview()" />
-        <span class="time-sep">:</span>
-        <input class="form-input time-input" id="raceS" type="number" min="0" max="59" placeholder="초" oninput="updatePreview()" />
-      </div>
-    </div>
-    <div id="vdotPreview" class="vdot-preview" style="display:none">
-      <div class="vdot-score">VDOT <strong id="vdotVal">-</strong></div>
-      <div class="vdot-paces">
-        <div class="vdot-pace-item">Easy<span id="pEasy">-</span></div>
-        <div class="vdot-pace-item">Tempo<span id="pTempo">-</span></div>
-        <div class="vdot-pace-item">Interval<span id="pInterval">-</span></div>
+      <button type="button" class="collapsible-header" onclick="toggleRaceRecord()">
+        <span class="form-label-inline">최근 레이스 기록</span>
+        <div class="collapsible-right">
+          <span id="raceRecordSummary" class="collapsible-summary-text"></span>
+          <svg class="collapsible-chevron" id="raceRecordChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+      </button>
+      <div id="raceRecordBody" style="display:none">
+        <div class="form-row" style="margin-bottom:8px;margin-top:12px">
+          <select class="form-select" id="raceDist" onchange="updatePreview()">
+            <option value="5000">5K</option>
+            <option value="10000">10K</option>
+            <option value="21097" selected>하프마라톤</option>
+            <option value="42195">풀마라톤</option>
+          </select>
+        </div>
+        <div class="time-wrap">
+          <input class="form-input time-input" id="raceH" type="number" min="0" max="9" placeholder="시" oninput="updatePreview()" />
+          <span class="time-sep">:</span>
+          <input class="form-input time-input" id="raceM" type="number" min="0" max="59" placeholder="분" oninput="updatePreview()" />
+          <span class="time-sep">:</span>
+          <input class="form-input time-input" id="raceS" type="number" min="0" max="59" placeholder="초" oninput="updatePreview()" />
+        </div>
+        <div id="vdotPreview" class="vdot-preview" style="display:none">
+          <div class="vdot-score">VDOT <strong id="vdotVal">-</strong></div>
+          <div class="vdot-paces">
+            <div class="vdot-pace-item">Easy<span id="pEasy">-</span></div>
+            <div class="vdot-pace-item">Tempo<span id="pTempo">-</span></div>
+            <div class="vdot-pace-item">Interval<span id="pInterval">-</span></div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="form-section">
       <label class="form-label">목표 대회 거리</label>
-      <select class="form-select" id="targetDist" onchange="updateWeeksOptions()">
-        <option value="half">하프마라톤</option>
-        <option value="10k">10K</option>
-        <option value="5k">5K</option>
-        <option value="full">풀마라톤</option>
-      </select>
+      <div class="chip-group" id="targetDistChips">
+        <button type="button" class="dist-chip active" data-value="half" onclick="selectTargetDist('half')">하프마라톤</button>
+        <button type="button" class="dist-chip" data-value="10k" onclick="selectTargetDist('10k')">10K</button>
+        <button type="button" class="dist-chip" data-value="5k" onclick="selectTargetDist('5k')">5K</button>
+        <button type="button" class="dist-chip" data-value="full" onclick="selectTargetDist('full')">풀마라톤</button>
+      </div>
+      <input type="hidden" id="targetDist" value="half" />
     </div>
     <div class="form-section">
       <label class="form-label">훈련 시작일</label>
@@ -687,6 +696,7 @@ function _pushScreen(state) {
 }
 
 let periodMode = 'weeks';
+let raceRecordOpen = false;
 
 function showCreate() {
   const vdotData = loadUserVdot();
@@ -711,6 +721,15 @@ function showCreate() {
   document.getElementById('raceM').value = m || '';
   document.getElementById('raceS').value = s || '';
   updatePreview();
+
+  // 레이스 기록 섹션 접힌 상태로 초기화
+  raceRecordOpen = false;
+  document.getElementById('raceRecordBody').style.display = 'none';
+  document.getElementById('raceRecordChevron').classList.remove('open');
+  updateRaceRecordSummary();
+
+  // 목표 대회 거리 칩 초기화 (기본값: half)
+  selectTargetDist('half');
 
   setPeriodMode('weeks');
   updateWeeksOptions();
@@ -840,6 +859,40 @@ function renderList() {
 
 // ── Create form ───────────────────────────────────────
 
+function selectTargetDist(val) {
+  document.querySelectorAll('#targetDistChips .dist-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.value === val);
+  });
+  document.getElementById('targetDist').value = val;
+  updateWeeksOptions();
+}
+
+function toggleRaceRecord() {
+  raceRecordOpen = !raceRecordOpen;
+  document.getElementById('raceRecordBody').style.display = raceRecordOpen ? 'block' : 'none';
+  document.getElementById('raceRecordChevron').classList.toggle('open', raceRecordOpen);
+}
+
+function updateRaceRecordSummary() {
+  const distEl = document.getElementById('raceDist');
+  const dist = distEl ? parseInt(distEl.value) : 0;
+  const h = parseInt(document.getElementById('raceH').value) || 0;
+  const m = parseInt(document.getElementById('raceM').value) || 0;
+  const s = parseInt(document.getElementById('raceS').value) || 0;
+  const totalSec = h*3600 + m*60 + s;
+  const distNames = { 5000:'5K', 10000:'10K', 21097:'하프', 42195:'풀마' };
+  const el = document.getElementById('raceRecordSummary');
+  if (!el) return;
+  if (totalSec > 0) {
+    const timeStr = h > 0
+      ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+      : `${m}:${String(s).padStart(2,'0')}`;
+    el.textContent = `${distNames[dist] || ''} ${timeStr}`;
+  } else {
+    el.textContent = '입력하기';
+  }
+}
+
 function updateWeeksOptions() {
   const sel = document.getElementById('numWeeks');
   sel.innerHTML = WEEKS_OPTIONS.map(w => `<option value="${w}">${w}주</option>`).join('');
@@ -869,6 +922,7 @@ function updatePreview() {
   document.getElementById('pInterval').textContent = `${fmtPace(p.intF)}-${fmtPace(p.intS)}/km`;
   document.getElementById('vdotPreview').style.display = 'block';
   document.getElementById('btnGenerate').disabled = false;
+  updateRaceRecordSummary();
 }
 
 function generateNewPlan() {
